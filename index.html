@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apartment Portal</title>
+<style>
+  :root{
+    --indigo:#4f46e5; --indigo-d:#4338ca;
+    --green:#22c55e; --orange:#f97316; --gray:#9ca3af;
+    --bg:#f8f9fc; --card:#ffffff; --border:#e5e7eb; --text:#1f2937; --muted:#6b7280;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);}
+  body.dark{--bg:#0f1115;--card:#1a1d24;--border:#2a2d36;--text:#e5e7eb;--muted:#9ca3af;}
+  header{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;}
+  header h1{font-size:18px;margin:0;}
+  .container{max-width:1200px;margin:0 auto;padding:20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .btn{background:var(--indigo);color:#fff;border:none;padding:9px 16px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;}
+  .btn:hover{background:var(--indigo-d);}
+  .btn:disabled{background:var(--gray);cursor:not-allowed;}
+  .btn.secondary{background:transparent;color:var(--indigo);border:1px solid var(--indigo);}
+  .btn.danger{background:#ef4444;}
+  .btn.small{padding:5px 10px;font-size:12px;}
+  input,select,textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--card);color:var(--text);}
+  input:disabled,select:disabled,textarea:disabled{opacity:.65;cursor:not-allowed;}
+  label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;}
+  .field{margin-bottom:10px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row > *{flex:1;min-width:140px;}
+  .hidden{display:none !important;}
+  a{color:var(--indigo);text-decoration:none;cursor:pointer;}
+  .readonly-banner{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:8px 14px;font-size:12px;margin-bottom:14px;}
+  body.dark .readonly-banner{background:#3a2f10;color:#fcd34d;border-color:#5c4a12;}
+
+  /* Login */
+  /* Login modal reuses .modal-overlay / .modal styles below */
+
+  /* Dashboard */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px;}
+  .stat-card{padding:16px;}
+  .stat-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px;}
+  .stat-value{font-size:22px;font-weight:700;}
+  .stat-label{font-size:12px;color:var(--muted);}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  .toolbar input,.toolbar select{width:auto;flex:1;min-width:160px;}
+
+  .flat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:18px;}
+  .flat-card{
+    position:relative;aspect-ratio:1/1;width:100%;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    cursor:pointer;border:4px solid var(--gray);background:var(--card);
+    box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .15s;padding:8px;text-align:center;
+  }
+  .flat-card:hover{transform:scale(1.06);box-shadow:0 6px 16px rgba(0,0,0,.15);z-index:2;}
+  .flat-card.owner{border-color:var(--green);}
+  .flat-card.tenant{border-color:var(--orange);}
+  .flat-card.vacant{border-color:var(--gray);}
+  .flat-card .flatnum{font-weight:700;font-size:14px;}
+  .flat-card .badge{font-size:9px;margin-top:2px;}
+  .flat-card .parking-icons{position:absolute;bottom:6px;font-size:10px;color:var(--muted);}
+  .flat-hover-info{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(17,24,39,.92);color:#fff;border-radius:50%;
+    width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .15s;padding:10px;text-align:center;
+  }
+  .flat-card:hover .flat-hover-info{opacity:1;}
+  .flat-hover-info .hname{font-size:12px;font-weight:600;line-height:1.2;word-break:break-word;}
+  .flat-hover-info .hmobile{font-size:11px;margin-top:4px;opacity:.85;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);}
+  .tab-btn{padding:10px 16px;background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;}
+  .tab-btn.active{color:var(--indigo);border-bottom-color:var(--indigo);font-weight:600;}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;z-index:100;overflow-y:auto;padding:30px 12px;}
+  .modal{background:var(--card);border-radius:16px;max-width:560px;width:100%;padding:24px;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .close-x{cursor:pointer;font-size:20px;color:var(--muted);background:none;border:none;}
+
+  .section-block{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .section-block:last-child{border-bottom:none;}
+  .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .section-header h3{margin:0;font-size:15px;}
+  .info-line{font-size:14px;margin:3px 0;}
+  .photo-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--bg);border:1px solid var(--border);}
+  .vehicle-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px;}
+  .doc-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;margin-top:6px;}
+
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:20px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;z-index:200;opacity:0;transition:opacity .3s;max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;}
+  .toast.error{background:#991b1b;}
+  .footer-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}
+  .role-pill{font-size:10px;text-transform:uppercase;background:var(--bg);padding:2px 8px;border-radius:20px;margin-left:6px;}
+  .error-text{color:#ef4444;font-size:13px;margin:6px 0;}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);z-index:9999;}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay"><span class="spinner" style="border-color:rgba(79,70,229,.3);border-top-color:var(--indigo);"></span>&nbsp;Loading portal…</div>
+
+<!-- LOGIN MODAL (opened via header "Login" link) -->
+<div id="loginModalRoot"></div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <header>
+    <h1>🏢 Apartment Portal</h1>
+    <div style="display:flex;align-items:center;gap:14px;font-size:14px;">
+      <span id="userLabel"></span>
+      <a onclick="toggleDark()">🌓</a>
+      <a id="authAction" onclick="openLoginModal()">Login</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs" id="tabBar">
+      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+      <button class="tab-btn" data-tab="backup" onclick="switchTab('backup')">Backup & Data</button>
+    </div>
+
+
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard">
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="toolbar">
+        <input id="searchInput" placeholder="Search block, flat, name, mobile, vehicle no..." oninput="renderFlats()">
+        <select id="statusFilter" onchange="renderFlats()">
+          <option value="">All Status</option>
+          <option value="owner">Owner Occupied</option>
+          <option value="tenant">Tenant Occupied</option>
+          <option value="vacant">Vacant</option>
+        </select>
+        <select id="blockFilter" onchange="renderFlats()">
+          <option value="">All Blocks</option>
+        </select>
+      </div>
+
+      <div id="flatGrid" class="flat-grid"></div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="tab-settings" class="hidden">
+      <div id="settingsReadonlyBanner" class="readonly-banner hidden">👁️ You have view-only access to Settings. Only an admin can make changes here.</div>
+
+      <div class="card" style="padding:20px;max-width:480px;">
+        <h3 style="margin-top:0;">Apartment Settings</h3>
+        <div class="field"><label>Apartment Name</label><input id="setApartmentName"></div>
+        <div class="field"><label>Contact Number</label><input id="setContact"></div>
+        <div class="field"><label>Address</label><input id="setAddress"></div>
+        <div class="row">
+          <div class="field"><label>Bike Parking Charge (₹/month)</label><input id="setBikeCharge" type="number"></div>
+          <div class="field"><label>Car Parking Charge (₹/month)</label><input id="setCarCharge" type="number"></div>
+        </div>
+        <button class="btn" id="saveSettingsBtn" onclick="saveSettings()">Save Settings</button>
+      </div>
+
+      <div class="card" style="padding:20px;max-width:480px;margin-top:16px;" id="changePassCard">
+        <h3 style="margin-top:0;">Change My Password</h3>
+        <div class="field"><label>Current Password</label><input id="curPass" type="password"></div>
+        <div class="field"><label>New Password</label><input id="newPass" type="password"></div>
+        <p id="passError" class="error-text hidden"></p>
+        <button class="btn" onclick="changePassword()">Update Password</button>
+      </div>
+
+      <div class="card" style="padding:20px;max-width:480px;margin-top:16px;" id="userMgmtCard">
+        <h3 style="margin-top:0;">Users</h3>
+        <p style="font-size:12px;color:var(--muted);margin-top:-8px;">
+          <strong>Admin</strong>: full edit access. <strong>Supervisor</strong>: can view this section, no edits/add/remove.
+          <strong>Viewer</strong>: dashboard directory only, no admin section access.
+        </p>
+        <div id="userList"></div>
+        <div id="addUserRow" class="hidden">
+          <div class="row" style="margin-top:10px;">
+            <input id="newUserName" placeholder="Username">
+            <input id="newUserPass" placeholder="Password">
+            <select id="newUserRole">
+              <option value="viewer">Viewer</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button class="btn small" style="margin-top:8px;" onclick="addUser()">+ Add User</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACKUP TAB -->
+    <div id="tab-backup" class="hidden">
+      <div class="card" style="padding:20px;max-width:560px;">
+        <h3 style="margin-top:0;">Data Storage</h3>
+        <p style="font-size:13px;color:var(--muted);">
+          All records live in your Turso database. Photos and documents (ownership proof, rental agreements) are stored in Cloudinary.
+          This tab is for a local read-only snapshot only — it is not a restore point.
+        </p>
+
+        <div class="section-block">
+          <h3 style="font-size:14px;">📦 Download Snapshot (.json)</h3>
+          <p style="font-size:13px;color:var(--muted);">A read-only copy of all current records, for your own records. Does not include photo/document files (those stay in Cloudinary).</p>
+          <button class="btn" onclick="exportSnapshot()">Download Snapshot</button>
+        </div>
+
+        <div class="section-block">
+          <h3 style="font-size:14px;">🔌 Connection Check</h3>
+          <p style="font-size:13px;color:var(--muted);">Verifies the app can reach your Turso database with the configured credentials.</p>
+          <button class="btn secondary" onclick="testConnection()">Test Turso Connection</button>
+          <p id="connStatus" style="font-size:12px;color:var(--muted);margin-top:6px;"></p>
+        </div>
+
+        <div class="section-block">
+          <h3 style="font-size:14px;color:#ef4444;">⚠️ Reset All Data</h3>
+          <p style="font-size:13px;color:var(--muted);">Deletes every flat/owner/tenant/vehicle record from the database. Photos already uploaded to Cloudinary are not deleted.</p>
+          <button class="btn danger" onclick="resetAllData()">Erase Everything</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="flatModalRoot"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG — fill these in before deploying
+   ============================================================ */
+const CONFIG = {
+  // Turso: Settings -> Database -> "HTTP" connection info
+  TURSO_URL:   'https://apartment-portal-jagsaam7.aws-ap-south-1.turso.io',
+  TURSO_TOKEN: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODU2ODUzMzYsImlkIjoiMDE5ZmMzMjMtY2UwMS03NDcxLWE3MjEtNDlmNTY5NTlhNDhlIiwia2lkIjoiTVgwNUM3d2czMllVdVJTblR2dHBtczlrRXRhbXlVRWpZTzZYRl9UMFRSSSIsInJpZCI6ImFkYTA3OWM4LTIwN2YtNGIyOC05ZWQyLTQxNTI4MzcxYzA5YyJ9.N3wqRBrWkfrEDv8iA3cXn4IOFWzSXuu4l-wRrDhfKKjFLIPfMBp2a-YaD4L2pgU2ANq0Kv1Kx6HLxM_btIEtCQ',
+
+  // Cloudinary: Settings -> Upload -> create an UNSIGNED upload preset
+  CLOUDINARY_CLOUD_NAME: 'imeiobyj',
+  CLOUDINARY_UPLOAD_PRESET: 'members',
+};
+
+/* ============================================================
+   TURSO HTTP CLIENT (libSQL "pipeline" API over HTTPS)
+   Docs: https://docs.turso.tech/sdk/http/reference
+   NOTE: This runs entirely in the browser. Since this is a static
+   site (GitHub Pages), the token above is visible to anyone who
+   views the page source. Treat this as a trusted-community
+   internal tool, not a hardened multi-tenant system.
+   ============================================================ */
+function toTursoArg(v){
+  if(v===null || v===undefined) return { type:'null' };
+  if(typeof v === 'number') return Number.isInteger(v) ? { type:'integer', value:String(v) } : { type:'float', value:v };
+  if(typeof v === 'boolean') return { type:'integer', value: v?'1':'0' };
+  return { type:'text', value:String(v) };
+}
+function cellValue(cell){
+  if(!cell || cell.type==='null') return null;
+  if(cell.type==='integer') return parseInt(cell.value,10);
+  if(cell.type==='float') return parseFloat(cell.value);
+  return cell.value;
+}
+function rowsToObjects(result){
+  if(!result || !result.cols) return [];
+  const cols = result.cols.map(c=>c.name);
+  return (result.rows||[]).map(row=>{
+    const obj={};
+    row.forEach((cell,i)=>{ obj[cols[i]] = cellValue(cell); });
+    return obj;
+  });
+}
+// Run one or more SQL statements in a single round trip. Returns an array
+// of { rows, lastInsertRowid, affectedRowCount } — one entry per statement.
+async function tursoBatch(statements){
+  const body = {
+    requests: [
+      ...statements.map(s => ({ type:'execute', stmt:{ sql:s.sql, args:(s.args||[]).map(toTursoArg) } })),
+      { type:'close' }
+    ]
+  };
+  let res;
+  try{
+    res = await fetch(`${CONFIG.TURSO_URL}/v2/pipeline`, {
+      method:'POST',
+      headers:{ 'Authorization':`Bearer ${CONFIG.TURSO_TOKEN}`, 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
+    });
+  }catch(e){
+    throw new Error('Could not reach Turso. Check TURSO_URL and your internet connection.');
+  }
+  if(!res.ok){
+    const text = await res.text().catch(()=>'');
+    throw new Error(`Turso error ${res.status}: ${text.slice(0,200)}`);
+  }
+  const data = await res.json();
+  return data.results.filter(r => r.response?.type === 'execute').map(r=>{
+    if(r.type === 'error') throw new Error(r.error?.message || 'Query failed');
+    const result = r.response.result;
+    return {
+      rows: rowsToObjects(result),
+      lastInsertRowid: result.last_insert_rowid ? parseInt(result.last_insert_rowid,10) : null,
+      affectedRowCount: result.affected_row_count || 0
+    };
+  });
+}
+async function tursoRun(sql, args){
+  const [r] = await tursoBatch([{ sql, args }]);
+  return r;
+}
+
+/* ============================================================
+   CLOUDINARY UPLOAD (unsigned)
+   ============================================================ */
+async function uploadToCloudinary(file){
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CONFIG.CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CONFIG.CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+    method:'POST', body: fd
+  });
+  if(!res.ok){
+    const text = await res.text().catch(()=>'');
+    throw new Error(`Cloudinary upload failed: ${text.slice(0,200)}`);
+  }
+  const data = await res.json();
+  return data.secure_url;
+}
+
+/* ============================================================
+   APP STATE
+   ============================================================ */
+let DATA = { users:[], settings:{}, flats:[], owners:[], tenants:[], vehicles:[] };
+let CURRENT_USER = null;
+
+function logAudit(action, entity, entityId, details){
+  // fire-and-forget; never block the UI on audit logging
+  tursoRun(
+    `INSERT INTO audit_log (username, action, entity, entity_id, details) VALUES (?,?,?,?,?)`,
+    [CURRENT_USER?.username||'', action, entity, entityId, details||'']
+  ).catch(e=>console.warn('Audit log failed', e));
+}
+
+async function loadAllData(){
+  const [flats, owners, tenants, vehicles, users, settings] = await tursoBatch([
+    { sql:'SELECT * FROM flats ORDER BY block, flat_number' },
+    { sql:'SELECT * FROM owners' },
+    { sql:'SELECT * FROM tenants' },
+    { sql:'SELECT * FROM vehicles' },
+    { sql:'SELECT id, username, role, full_name FROM users' }, // never fetch passwords in bulk
+    { sql:'SELECT * FROM settings WHERE id=1' },
+  ]);
+  DATA.flats = flats.rows.map(f=>({ id:f.id, block:f.block, flatNumber:f.flat_number, status:f.status, parkingAvailable: !!f.parking_available }));
+  DATA.owners = owners.rows.map(o=>({ ...o, flatId:o.flat_id, bloodGroup:o.blood_group, emergencyContact:o.emergency_contact, emergencyNumber:o.emergency_number, moveInDate:o.move_in_date, photoUrl:o.photo_url, proofUrl:o.proof_url }));
+  DATA.tenants = tenants.rows.map(t=>({ ...t, flatId:t.flat_id, rentalStartDate:t.rental_start_date, rentalEndDate:t.rental_end_date, policeVerification:t.police_verification, photoUrl:t.photo_url, agreementUrl:t.agreement_url }));
+  DATA.vehicles = vehicles.rows.map(v=>({ ...v, flatId:v.flat_id, insuranceExpiry:v.insurance_expiry }));
+  DATA.users = users.rows;
+  const s = settings.rows[0] || {};
+  DATA.settings = { apartmentName:s.apartment_name, contact:s.contact, address:s.address, bikeCharge:s.bike_charge, carCharge:s.car_charge };
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+function openLoginModal(){
+  document.getElementById('loginModalRoot').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeLoginModal()">
+    <div class="modal" style="max-width:340px;text-align:center;">
+      <div class="modal-header">
+        <h2 style="margin:0;">Sign In</h2>
+        <button class="close-x" onclick="closeLoginModal()">✕</button>
+      </div>
+      <div class="field" style="text-align:left;"><label>Username</label><input id="loginUser" placeholder="admin"></div>
+      <div class="field" style="text-align:left;"><label>Password</label><input id="loginPass" type="password" placeholder="••••••"></div>
+      <p id="loginError" class="error-text hidden"></p>
+      <button class="btn" style="width:100%;margin-top:8px;" onclick="doLogin()">Sign In</button>
+    </div>
+  </div>`;
+  document.getElementById('loginUser').focus();
+}
+function closeLoginModal(){ document.getElementById('loginModalRoot').innerHTML=''; }
+
+async function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.add('hidden');
+  try{
+    const r = await tursoRun('SELECT * FROM users WHERE username=? AND password=?', [u,p]);
+    if(!r.rows.length){ errEl.textContent='Invalid username or password.'; errEl.classList.remove('hidden'); return; }
+    CURRENT_USER = r.rows[0];
+    sessionStorage.setItem('apm_session', JSON.stringify(CURRENT_USER));
+    closeLoginModal();
+    refreshPermissionsUI();
+    renderSettingsForm();
+    renderUserList();
+    switchTab('dashboard');
+    showToast(`Signed in as ${CURRENT_USER.username}.`);
+  }catch(e){
+    errEl.textContent = e.message; errEl.classList.remove('hidden');
+  }
+}
+function doLogout(){
+  sessionStorage.removeItem('apm_session');
+  CURRENT_USER = null;
+  refreshPermissionsUI();
+  switchTab('dashboard');
+  showToast('Logged out — viewing as guest.');
+}
+
+/* ---- Permissions ----
+   No login (guest)   : read-only, dashboard directory only (same reach as viewer)
+   viewer             : read-only, dashboard directory only (no settings/backup tabs at all)
+   supervisor         : can open the admin Settings section (incl. Users list) to VIEW only —
+                        no editing settings, no add/remove users, no backup/reset
+   admin              : full edit, settings, user management, backup/reset
+*/
+function isAdmin(){ return CURRENT_USER?.role === 'admin'; }
+function isSupervisor(){ return CURRENT_USER?.role === 'supervisor'; }
+function isViewer(){ return !CURRENT_USER || CURRENT_USER?.role === 'viewer'; }
+function canEdit(){ return isAdmin(); }
+function canSeeSettingsTab(){ return isAdmin() || isSupervisor(); }
+function canSeeBackupTab(){ return isAdmin(); }
+
+function refreshPermissionsUI(){
+  const userLabel = document.getElementById('userLabel');
+  const authAction = document.getElementById('authAction');
+  if(CURRENT_USER){
+    userLabel.innerHTML = `${CURRENT_USER.username}<span class="role-pill">${CURRENT_USER.role}</span>`;
+    authAction.textContent = 'Logout';
+    authAction.setAttribute('onclick','doLogout()');
+  }else{
+    userLabel.innerHTML = `Guest<span class="role-pill">view only</span>`;
+    authAction.textContent = 'Login';
+    authAction.setAttribute('onclick','openLoginModal()');
+  }
+
+  // Tab visibility by role
+  document.querySelector('[data-tab="settings"]').classList.toggle('hidden', !canSeeSettingsTab());
+  document.querySelector('[data-tab="backup"]').classList.toggle('hidden', !canSeeBackupTab());
+  // Settings tab: supervisor can open it, but everything inside is read-only
+  document.getElementById('settingsReadonlyBanner').classList.toggle('hidden', !isSupervisor());
+  document.getElementById('changePassCard').classList.toggle('hidden', !CURRENT_USER);
+  document.getElementById('userMgmtCard').classList.toggle('hidden', !canSeeSettingsTab());
+  document.getElementById('addUserRow').classList.toggle('hidden', !isAdmin());
+  document.getElementById('saveSettingsBtn').classList.toggle('hidden', !isAdmin());
+  ['setApartmentName','setContact','setAddress','setBikeCharge','setCarCharge'].forEach(id=>{
+    document.getElementById(id).disabled = !isAdmin();
+  });
+}
+
+async function bootApp(){
+  document.getElementById('app').classList.remove('hidden');
+  refreshPermissionsUI();
+
+  showToast('Loading data…');
+  try{
+    await loadAllData();
+  }catch(e){
+    showToast('Could not load data: ' + e.message, true);
+  }
+  populateBlockFilter();
+  renderStats();
+  renderFlats();
+  renderSettingsForm();
+  renderUserList();
+  switchTab('dashboard');
+}
+
+/* ======================= TABS ======================= */
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  ['dashboard','settings','backup'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('hidden', t!==name);
+  });
+}
+
+/* ======================= DASHBOARD ======================= */
+function renderStats(){
+  const total = DATA.flats.length;
+  const ownerOcc = DATA.flats.filter(f=>f.status==='owner').length;
+  const tenantOcc = DATA.flats.filter(f=>f.status==='tenant').length;
+  const vacant = DATA.flats.filter(f=>f.status==='vacant').length;
+  const cars = DATA.vehicles.filter(v=>v.type==='4wheeler' && v.status==='active').length;
+  const bikes = DATA.vehicles.filter(v=>v.type==='2wheeler' && v.status==='active').length;
+  const revenue = cars*Number(DATA.settings.carCharge||0) + bikes*Number(DATA.settings.bikeCharge||0);
+
+  const cards = [
+    ['🏠','Total Flats', total, '#eef2ff','#4f46e5'],
+    ['✅','Occupied', ownerOcc+tenantOcc, '#f0fdf4','#16a34a'],
+    ['🔲','Vacant', vacant, '#f3f4f6','#4b5563'],
+    ['🟢','Owner Occupied', ownerOcc, '#ecfdf5','#059669'],
+    ['🟠','Tenant Occupied', tenantOcc, '#fff7ed','#ea580c'],
+    ['🚗','Total Cars', cars, '#eff6ff','#2563eb'],
+    ['🏍️','Total Bikes', bikes, '#faf5ff','#9333ea'],
+    ['💰','Parking Revenue', '₹'+revenue.toLocaleString('en-IN'), '#fffbeb','#d97706'],
+  ];
+  document.getElementById('statsGrid').innerHTML = cards.map(([icon,label,val,bg,fg])=>`
+    <div class="card stat-card">
+      <div class="stat-icon" style="background:${bg};color:${fg}">${icon}</div>
+      <div class="stat-value">${val}</div>
+      <div class="stat-label">${label}</div>
+    </div>`).join('');
+}
+
+function populateBlockFilter(){
+  const blocks = [...new Set(DATA.flats.map(f=>f.block))].sort();
+  const sel = document.getElementById('blockFilter');
+  sel.innerHTML = '<option value="">All Blocks</option>' + blocks.map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+}
+
+function renderFlats(){
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const status = document.getElementById('statusFilter').value;
+  const block = document.getElementById('blockFilter').value;
+
+  let flats = DATA.flats.filter(f=>{
+    if(status && f.status!==status) return false;
+    if(block && f.block!==block) return false;
+    if(search){
+      const owner = DATA.owners.find(o=>o.flatId===f.id);
+      const tenant = DATA.tenants.find(t=>t.flatId===f.id);
+      const vehicles = DATA.vehicles.filter(v=>v.flatId===f.id);
+      const hay = [
+        f.block, f.flatNumber,
+        owner?.name, owner?.mobile,
+        tenant?.name, tenant?.mobile,
+        ...vehicles.map(v=>v.number)
+      ].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  flats.sort((a,b)=> a.block.localeCompare(b.block) || a.flatNumber.localeCompare(b.flatNumber));
+
+  const grid = document.getElementById('flatGrid');
+  if(flats.length===0){ grid.innerHTML = '<p class="empty">No flats match your search.</p>'; return; }
+
+  grid.innerHTML = flats.map(f=>{
+    const owner = f.status==='owner' ? DATA.owners.find(o=>o.flatId===f.id) : null;
+    const tenant = f.status==='tenant' ? DATA.tenants.find(t=>t.flatId===f.id) : null;
+    const occupant = owner || tenant;
+    const cars = DATA.vehicles.filter(v=>v.flatId===f.id && v.type==='4wheeler' && v.status==='active').length;
+    const bikes = DATA.vehicles.filter(v=>v.flatId===f.id && v.type==='2wheeler' && v.status==='active').length;
+    const parkingIcons = `${cars?`🚗×${cars} `:''}${bikes?`🏍️×${bikes}`:''}`;
+    return `
+    <div class="card flat-card ${f.status}" onclick="openFlatModal(${f.id})">
+      <div class="flatnum">${f.block}-${f.flatNumber}</div>
+      <span class="badge">${f.status}</span>
+      ${parkingIcons?`<div class="parking-icons">${parkingIcons}</div>`:''}
+      <div class="flat-hover-info">
+        <div class="hname">${occupant ? occupant.name : 'Vacant'}</div>
+        ${occupant ? `<div class="hmobile">📱 ${occupant.mobile}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ======================= FLAT MODAL ======================= */
+function openFlatModal(flatId){
+  const flat = DATA.flats.find(f=>f.id===flatId);
+  const owner = DATA.owners.find(o=>o.flatId===flatId);
+  const tenant = DATA.tenants.find(t=>t.flatId===flatId);
+  const vehicles = DATA.vehicles.filter(v=>v.flatId===flatId);
+
+  const root = document.getElementById('flatModalRoot');
+  root.innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 style="margin:0;">Flat ${flat.block}-${flat.flatNumber}</h2>
+        <button class="close-x" onclick="closeModal()">✕</button>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-top:-8px;">
+        Status: <strong>${flat.status}</strong> · Parking: ${flat.parkingAvailable?'Available':'Not Available'}
+        ${canEdit()?`<a style="margin-left:10px;font-size:12px;" onclick="toggleParking(${flat.id})">Toggle Parking</a>`:''}
+      </p>
+
+      <div class="section-block">
+        <div class="section-header"><h3>Owner</h3>
+          ${canEdit() && !owner ? `<a onclick="showOwnerForm(${flatId})">+ Add Owner</a>` : ''}
+          ${canEdit() && owner ? `<a onclick="showOwnerForm(${flatId}, ${owner.id})">Edit</a> <a onclick="deleteOwner(${owner.id})" style="color:#ef4444;margin-left:8px;">Delete</a>` : ''}
+        </div>
+        <div id="ownerSection">
+          ${owner ? renderOwnerInfo(owner) : '<p class="empty">No owner on record.</p>'}
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-header"><h3>Tenant</h3>
+          ${canEdit() && !tenant ? `<a onclick="showTenantForm(${flatId})">+ Add Tenant</a>` : ''}
+          ${canEdit() && tenant ? `<a onclick="showTenantForm(${flatId}, ${tenant.id})">Edit</a> <a onclick="deleteTenant(${tenant.id})" style="color:#ef4444;margin-left:8px;">Delete</a>` : ''}
+        </div>
+        <div id="tenantSection">
+          ${tenant ? renderTenantInfo(tenant) : '<p class="empty">No tenant on record.</p>'}
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-header"><h3>Vehicles</h3>
+          ${canEdit() ? `<a onclick="showVehicleForm(${flatId})">+ Add Vehicle</a>` : ''}
+        </div>
+        <div id="vehicleSection">
+          ${vehicles.length ? vehicles.map(v=>renderVehicleRow(v)).join('') : '<p class="empty">No vehicles registered.</p>'}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function closeModal(){ document.getElementById('flatModalRoot').innerHTML=''; }
+
+function renderOwnerInfo(o){
+  return `
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    ${o.photoUrl?`<img src="${o.photoUrl}" class="photo-preview">`:''}
+    <div>
+      <div class="info-line"><strong>${o.name}</strong></div>
+      <div class="info-line">📱 ${o.mobile}</div>
+      ${o.email?`<div class="info-line">✉️ ${o.email}</div>`:''}
+      ${o.occupation?`<div class="info-line">💼 ${o.occupation}</div>`:''}
+      ${o.bloodGroup?`<div class="info-line">🩸 ${o.bloodGroup}</div>`:''}
+      ${o.emergencyContact?`<div class="info-line">🚨 ${o.emergencyContact} (${o.emergencyNumber||''})</div>`:''}
+      ${o.moveInDate?`<div class="info-line">📅 Move-in: ${o.moveInDate}</div>`:''}
+      ${o.proofUrl?`<div><a class="doc-chip" href="${o.proofUrl}" target="_blank" rel="noopener">📄 Ownership / Flat document</a></div>`:''}
+    </div>
+  </div>`;
+}
+function renderTenantInfo(t){
+  return `
+  <div style="display:flex;gap:12px;align-items:flex-start;">
+    ${t.photoUrl?`<img src="${t.photoUrl}" class="photo-preview">`:''}
+    <div>
+      <div class="info-line"><strong>${t.name}</strong></div>
+      <div class="info-line">📱 ${t.mobile}</div>
+      ${t.email?`<div class="info-line">✉️ ${t.email}</div>`:''}
+      ${t.company?`<div class="info-line">🏢 ${t.company}</div>`:''}
+      ${t.rentalStartDate?`<div class="info-line">📅 ${t.rentalStartDate} → ${t.rentalEndDate||'ongoing'}</div>`:''}
+      ${t.policeVerification?`<div class="info-line">🛡️ Police Verification: ${t.policeVerification}</div>`:''}
+      ${t.agreementUrl?`<div><a class="doc-chip" href="${t.agreementUrl}" target="_blank" rel="noopener">📄 Rental agreement</a></div>`:''}
+    </div>
+  </div>`;
+}
+function renderVehicleRow(v){
+  return `
+  <div class="vehicle-row">
+    <span>${v.type==='4wheeler'?'🚗':'🏍️'} ${v.number} — ${v.brand||''} ${v.model||''} ${v.color?`(${v.color})`:''} ${v.slot?` · Slot ${v.slot}`:''}</span>
+    ${canEdit()?`<a onclick="deleteVehicle(${v.id})" style="color:#ef4444;">Remove</a>`:''}
+  </div>`;
+}
+
+/* ---- Owner form (add + edit) ---- */
+function showOwnerForm(flatId, ownerId){
+  const existing = ownerId ? DATA.owners.find(o=>o.id===ownerId) : null;
+  const v = existing || {};
+  document.getElementById('ownerSection').innerHTML = `
+  <form onsubmit="return submitOwner(event, ${flatId}, ${ownerId||'null'})">
+    <div class="field"><label>Photo</label><input type="file" accept="image/*" id="ownerPhotoInput"></div>
+    <div class="field"><label>Ownership / Flat Position Document (PDF or image)</label><input type="file" accept="image/*,.pdf" id="ownerProofInput"></div>
+    <div class="row">
+      <div class="field"><label>Full Name *</label><input name="name" required value="${v.name||''}"></div>
+      <div class="field"><label>Mobile (10 digits) *</label><input name="mobile" required pattern="\\d{10}" value="${v.mobile||''}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>WhatsApp</label><input name="whatsapp" pattern="\\d{10}" value="${v.whatsapp||''}"></div>
+      <div class="field"><label>Email</label><input name="email" type="email" value="${v.email||''}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Occupation</label><input name="occupation" value="${v.occupation||''}"></div>
+      <div class="field"><label>Blood Group</label><input name="bloodGroup" value="${v.bloodGroup||''}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Emergency Contact Name</label><input name="emergencyContact" value="${v.emergencyContact||''}"></div>
+      <div class="field"><label>Emergency Number</label><input name="emergencyNumber" value="${v.emergencyNumber||''}"></div>
+    </div>
+    <div class="field"><label>Move-in Date</label><input name="moveInDate" type="date" value="${v.moveInDate||''}"></div>
+    <p id="ownerFormError" class="error-text hidden"></p>
+    <div class="footer-actions">
+      <button type="submit" class="btn" id="ownerSaveBtn">Save</button>
+      <button type="button" class="btn secondary" onclick="openFlatModal(${flatId})">Cancel</button>
+    </div>
+  </form>`;
+}
+async function submitOwner(e, flatId, ownerId){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const mobile = fd.get('mobile');
+  const whatsapp = fd.get('whatsapp');
+  const errEl = document.getElementById('ownerFormError');
+  if(!/^\d{10}$/.test(mobile)){ errEl.textContent='Mobile must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  if(whatsapp && !/^\d{10}$/.test(whatsapp)){ errEl.textContent='WhatsApp must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  errEl.classList.add('hidden');
+
+  const btn = document.getElementById('ownerSaveBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+  try{
+    const existing = ownerId ? DATA.owners.find(o=>o.id===ownerId) : null;
+    let photoUrl = existing?.photoUrl || null;
+    let proofUrl = existing?.proofUrl || null;
+    const photoFile = document.getElementById('ownerPhotoInput').files[0];
+    const proofFile = document.getElementById('ownerProofInput').files[0];
+    if(photoFile) photoUrl = await uploadToCloudinary(photoFile);
+    if(proofFile) proofUrl = await uploadToCloudinary(proofFile);
+
+    const fields = {
+      name: fd.get('name'), mobile, whatsapp, email: fd.get('email'),
+      occupation: fd.get('occupation'), blood_group: fd.get('bloodGroup'),
+      emergency_contact: fd.get('emergencyContact'), emergency_number: fd.get('emergencyNumber'),
+      move_in_date: fd.get('moveInDate'), photo_url: photoUrl, proof_url: proofUrl
+    };
+
+    if(ownerId){
+      await tursoRun(
+        `UPDATE owners SET name=?, mobile=?, whatsapp=?, email=?, occupation=?, blood_group=?, emergency_contact=?, emergency_number=?, move_in_date=?, photo_url=?, proof_url=? WHERE id=?`,
+        [fields.name, fields.mobile, fields.whatsapp, fields.email, fields.occupation, fields.blood_group, fields.emergency_contact, fields.emergency_number, fields.move_in_date, fields.photo_url, fields.proof_url, ownerId]
+      );
+      logAudit('UPDATE','owner',ownerId,fields.name);
+    }else{
+      const r = await tursoRun(
+        `INSERT INTO owners (flat_id, name, mobile, whatsapp, email, occupation, blood_group, emergency_contact, emergency_number, move_in_date, photo_url, proof_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [flatId, fields.name, fields.mobile, fields.whatsapp, fields.email, fields.occupation, fields.blood_group, fields.emergency_contact, fields.emergency_number, fields.move_in_date, fields.photo_url, fields.proof_url]
+      );
+      await tursoRun(`UPDATE flats SET status='owner' WHERE id=?`, [flatId]);
+      logAudit('CREATE','owner',r.lastInsertRowid,fields.name);
+    }
+    await loadAllData();
+    renderStats(); renderFlats();
+    openFlatModal(flatId);
+    showToast('Owner saved.');
+  }catch(err){
+    errEl.textContent = err.message; errEl.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+  return false;
+}
+async function deleteOwner(ownerId){
+  if(!confirm('Delete owner record?')) return;
+  const owner = DATA.owners.find(o=>o.id===ownerId);
+  const hasTenant = DATA.tenants.some(t=>t.flatId===owner.flatId);
+  await tursoRun('DELETE FROM owners WHERE id=?', [ownerId]);
+  await tursoRun(`UPDATE flats SET status=? WHERE id=?`, [hasTenant?'tenant':'vacant', owner.flatId]);
+  logAudit('DELETE','owner',ownerId,owner.name);
+  await loadAllData();
+  renderStats(); renderFlats();
+  openFlatModal(owner.flatId);
+}
+
+/* ---- Tenant form (add + edit) ---- */
+function showTenantForm(flatId, tenantId){
+  const existing = tenantId ? DATA.tenants.find(t=>t.id===tenantId) : null;
+  const v = existing || {};
+  document.getElementById('tenantSection').innerHTML = `
+  <form onsubmit="return submitTenant(event, ${flatId}, ${tenantId||'null'})">
+    <div class="field"><label>Photo</label><input type="file" accept="image/*" id="tenantPhotoInput"></div>
+    <div class="field"><label>Rental Agreement (PDF or image)</label><input type="file" accept="image/*,.pdf" id="tenantAgreementInput"></div>
+    <div class="row">
+      <div class="field"><label>Full Name *</label><input name="name" required value="${v.name||''}"></div>
+      <div class="field"><label>Mobile (10 digits) *</label><input name="mobile" required pattern="\\d{10}" value="${v.mobile||''}"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>WhatsApp</label><input name="whatsapp" pattern="\\d{10}" value="${v.whatsapp||''}"></div>
+      <div class="field"><label>Email</label><input name="email" type="email" value="${v.email||''}"></div>
+    </div>
+    <div class="field"><label>Company</label><input name="company" value="${v.company||''}"></div>
+    <div class="row">
+      <div class="field"><label>Rental Start</label><input name="rentalStartDate" type="date" value="${v.rentalStartDate||''}"></div>
+      <div class="field"><label>Rental End</label><input name="rentalEndDate" type="date" value="${v.rentalEndDate||''}"></div>
+    </div>
+    <div class="field"><label>Police Verification Number</label><input name="policeVerification" value="${v.policeVerification||''}"></div>
+    <p id="tenantFormError" class="error-text hidden"></p>
+    <div class="footer-actions">
+      <button type="submit" class="btn" id="tenantSaveBtn">Save</button>
+      <button type="button" class="btn secondary" onclick="openFlatModal(${flatId})">Cancel</button>
+    </div>
+  </form>`;
+}
+async function submitTenant(e, flatId, tenantId){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const mobile = fd.get('mobile');
+  const whatsapp = fd.get('whatsapp');
+  const errEl = document.getElementById('tenantFormError');
+  if(!/^\d{10}$/.test(mobile)){ errEl.textContent='Mobile must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  if(whatsapp && !/^\d{10}$/.test(whatsapp)){ errEl.textContent='WhatsApp must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  errEl.classList.add('hidden');
+
+  const btn = document.getElementById('tenantSaveBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+  try{
+    const existing = tenantId ? DATA.tenants.find(t=>t.id===tenantId) : null;
+    let photoUrl = existing?.photoUrl || null;
+    let agreementUrl = existing?.agreementUrl || null;
+    const photoFile = document.getElementById('tenantPhotoInput').files[0];
+    const agreementFile = document.getElementById('tenantAgreementInput').files[0];
+    if(photoFile) photoUrl = await uploadToCloudinary(photoFile);
+    if(agreementFile) agreementUrl = await uploadToCloudinary(agreementFile);
+
+    const fields = {
+      name: fd.get('name'), mobile, whatsapp, email: fd.get('email'), company: fd.get('company'),
+      rental_start_date: fd.get('rentalStartDate'), rental_end_date: fd.get('rentalEndDate'),
+      police_verification: fd.get('policeVerification'), photo_url: photoUrl, agreement_url: agreementUrl
+    };
+
+    if(tenantId){
+      await tursoRun(
+        `UPDATE tenants SET name=?, mobile=?, whatsapp=?, email=?, company=?, rental_start_date=?, rental_end_date=?, police_verification=?, photo_url=?, agreement_url=? WHERE id=?`,
+        [fields.name, fields.mobile, fields.whatsapp, fields.email, fields.company, fields.rental_start_date, fields.rental_end_date, fields.police_verification, fields.photo_url, fields.agreement_url, tenantId]
+      );
+      logAudit('UPDATE','tenant',tenantId,fields.name);
+    }else{
+      const r = await tursoRun(
+        `INSERT INTO tenants (flat_id, name, mobile, whatsapp, email, company, rental_start_date, rental_end_date, police_verification, photo_url, agreement_url) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        [flatId, fields.name, fields.mobile, fields.whatsapp, fields.email, fields.company, fields.rental_start_date, fields.rental_end_date, fields.police_verification, fields.photo_url, fields.agreement_url]
+      );
+      await tursoRun(`UPDATE flats SET status='tenant' WHERE id=?`, [flatId]);
+      logAudit('CREATE','tenant',r.lastInsertRowid,fields.name);
+    }
+    await loadAllData();
+    renderStats(); renderFlats();
+    openFlatModal(flatId);
+    showToast('Tenant saved.');
+  }catch(err){
+    errEl.textContent = err.message; errEl.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+  return false;
+}
+async function deleteTenant(tenantId){
+  if(!confirm('Delete tenant record?')) return;
+  const tenant = DATA.tenants.find(t=>t.id===tenantId);
+  const hasOwner = DATA.owners.some(o=>o.flatId===tenant.flatId);
+  await tursoRun('DELETE FROM tenants WHERE id=?', [tenantId]);
+  await tursoRun(`UPDATE flats SET status=? WHERE id=?`, [hasOwner?'owner':'vacant', tenant.flatId]);
+  logAudit('DELETE','tenant',tenantId,tenant.name);
+  await loadAllData();
+  renderStats(); renderFlats();
+  openFlatModal(tenant.flatId);
+}
+
+/* ---- Vehicle form ---- */
+function showVehicleForm(flatId){
+  document.getElementById('vehicleSection').innerHTML = `
+  <form onsubmit="return submitVehicle(event, ${flatId})">
+    <div class="row">
+      <div class="field"><label>Type</label>
+        <select name="type"><option value="2wheeler">2 Wheeler</option><option value="4wheeler">4 Wheeler</option></select>
+      </div>
+      <div class="field"><label>Vehicle Number *</label><input name="number" required style="text-transform:uppercase;"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Brand</label><input name="brand"></div>
+      <div class="field"><label>Model</label><input name="model"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Color</label><input name="color"></div>
+      <div class="field"><label>Parking Slot</label><input name="slot"></div>
+    </div>
+    <div class="field"><label>Insurance Expiry</label><input name="insuranceExpiry" type="date"></div>
+    <p id="vehicleFormError" class="error-text hidden"></p>
+    <div class="footer-actions">
+      <button type="submit" class="btn">Save Vehicle</button>
+      <button type="button" class="btn secondary" onclick="openFlatModal(${flatId})">Cancel</button>
+    </div>
+  </form>
+  <div style="margin-top:12px;">${DATA.vehicles.filter(v=>v.flatId===flatId).map(v=>renderVehicleRow(v)).join('')}</div>`;
+}
+async function submitVehicle(e, flatId){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const number = fd.get('number').toUpperCase().trim();
+  const errEl = document.getElementById('vehicleFormError');
+  if(DATA.vehicles.some(v=>v.number===number)){
+    errEl.textContent='This vehicle number is already registered.'; errEl.classList.remove('hidden'); return false;
+  }
+  errEl.classList.add('hidden');
+  const r = await tursoRun(
+    `INSERT INTO vehicles (flat_id, type, number, brand, model, color, slot, insurance_expiry, status) VALUES (?,?,?,?,?,?,?,?, 'active')`,
+    [flatId, fd.get('type'), number, fd.get('brand'), fd.get('model'), fd.get('color'), fd.get('slot'), fd.get('insuranceExpiry')]
+  );
+  logAudit('CREATE','vehicle',r.lastInsertRowid,number);
+  await loadAllData();
+  renderStats(); renderFlats();
+  openFlatModal(flatId);
+  showToast('Vehicle saved.');
+  return false;
+}
+async function deleteVehicle(vehicleId){
+  if(!confirm('Remove this vehicle?')) return;
+  const v = DATA.vehicles.find(v=>v.id===vehicleId);
+  await tursoRun('DELETE FROM vehicles WHERE id=?', [vehicleId]);
+  logAudit('DELETE','vehicle',vehicleId,v.number);
+  await loadAllData();
+  renderStats(); renderFlats();
+  openFlatModal(v.flatId);
+}
+async function toggleParking(flatId){
+  const flat = DATA.flats.find(f=>f.id===flatId);
+  await tursoRun('UPDATE flats SET parking_available=? WHERE id=?', [flat.parkingAvailable?0:1, flatId]);
+  await loadAllData();
+  renderFlats();
+  openFlatModal(flatId);
+}
+
+/* ======================= SETTINGS ======================= */
+function renderSettingsForm(){
+  document.getElementById('setApartmentName').value = DATA.settings.apartmentName||'';
+  document.getElementById('setContact').value = DATA.settings.contact||'';
+  document.getElementById('setAddress').value = DATA.settings.address||'';
+  document.getElementById('setBikeCharge').value = DATA.settings.bikeCharge||0;
+  document.getElementById('setCarCharge').value = DATA.settings.carCharge||0;
+}
+async function saveSettings(){
+  if(!isAdmin()) return;
+  const apartmentName = document.getElementById('setApartmentName').value;
+  const contact = document.getElementById('setContact').value;
+  const address = document.getElementById('setAddress').value;
+  const bikeCharge = Number(document.getElementById('setBikeCharge').value)||0;
+  const carCharge = Number(document.getElementById('setCarCharge').value)||0;
+  await tursoRun(
+    `UPDATE settings SET apartment_name=?, contact=?, address=?, bike_charge=?, car_charge=? WHERE id=1`,
+    [apartmentName, contact, address, bikeCharge, carCharge]
+  );
+  await loadAllData();
+  renderStats();
+  showToast('Settings saved.');
+}
+async function changePassword(){
+  const cur = document.getElementById('curPass').value;
+  const next = document.getElementById('newPass').value;
+  const errEl = document.getElementById('passError');
+  if(CURRENT_USER.password !== cur){ errEl.textContent='Current password is incorrect.'; errEl.classList.remove('hidden'); return; }
+  if(!next || next.length<4){ errEl.textContent='New password must be at least 4 characters.'; errEl.classList.remove('hidden'); return; }
+  errEl.classList.add('hidden');
+  await tursoRun('UPDATE users SET password=? WHERE id=?', [next, CURRENT_USER.id]);
+  CURRENT_USER = { ...CURRENT_USER, password: next };
+  sessionStorage.setItem('apm_session', JSON.stringify(CURRENT_USER));
+  document.getElementById('curPass').value=''; document.getElementById('newPass').value='';
+  showToast('Password updated.');
+}
+function renderUserList(){
+  document.getElementById('userList').innerHTML = DATA.users.map(u=>`
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);">
+      <span>${u.username} <span class="role-pill">${u.role}</span></span>
+      ${isAdmin() && CURRENT_USER && u.id!==CURRENT_USER.id ? `<a onclick="removeUser(${u.id})" style="color:#ef4444;font-size:12px;">Remove</a>`:''}
+    </div>`).join('');
+}
+async function addUser(){
+  if(!isAdmin()) return;
+  const username = document.getElementById('newUserName').value.trim();
+  const password = document.getElementById('newUserPass').value;
+  const role = document.getElementById('newUserRole').value;
+  if(!username || !password){ showToast('Username and password required.', true); return; }
+  if(DATA.users.some(u=>u.username===username)){ showToast('Username already exists.', true); return; }
+  await tursoRun('INSERT INTO users (username, password, role, full_name) VALUES (?,?,?,?)', [username, password, role, username]);
+  await loadAllData();
+  document.getElementById('newUserName').value=''; document.getElementById('newUserPass').value='';
+  renderUserList();
+  showToast('User added.');
+}
+async function removeUser(userId){
+  if(!isAdmin()) return;
+  if(!confirm('Remove this user?')) return;
+  await tursoRun('DELETE FROM users WHERE id=?', [userId]);
+  await loadAllData();
+  renderUserList();
+}
+
+/* ======================= BACKUP / EXPORT / RESET ======================= */
+function exportSnapshot(){
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `apartment-portal-snapshot-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Snapshot downloaded.');
+}
+async function testConnection(){
+  const el = document.getElementById('connStatus');
+  el.textContent = 'Testing…';
+  try{
+    await tursoRun('SELECT 1');
+    el.textContent = '✅ Connected to Turso successfully.';
+  }catch(e){
+    el.textContent = '❌ ' + e.message;
+  }
+}
+async function resetAllData(){
+  if(!isAdmin()) return;
+  if(!confirm('This will erase ALL data (flats, owners, tenants, vehicles) from the database. This cannot be undone. Continue?')) return;
+  if(!confirm('Are you absolutely sure?')) return;
+  await tursoBatch([
+    { sql:'DELETE FROM vehicles' },
+    { sql:'DELETE FROM tenants' },
+    { sql:'DELETE FROM owners' },
+    { sql:"UPDATE flats SET status='vacant', parking_available=1" },
+  ]);
+  await loadAllData();
+  renderStats(); renderFlats();
+  showToast('All records erased.');
+}
+
+/* ======================= MISC ======================= */
+function showToast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  localStorage.setItem('apm_dark', document.body.classList.contains('dark') ? '1':'0');
+}
+
+/* ======================= INIT ======================= */
+(async function init(){
+  if(localStorage.getItem('apm_dark')==='1') document.body.classList.add('dark');
+  document.getElementById('loadingOverlay').classList.add('hidden');
+
+  const session = sessionStorage.getItem('apm_session');
+  if(session){
+    try{ CURRENT_USER = JSON.parse(session); }catch(e){ CURRENT_USER = null; }
+  }
+  await bootApp(); // Dashboard is public by default; CURRENT_USER may be null (guest/view-only)
+})();
+</script>
+</body>
+</html>
+</script>
+</body>
+</html>
