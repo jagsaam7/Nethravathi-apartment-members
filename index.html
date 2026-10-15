@@ -33,9 +33,8 @@
   a{color:var(--indigo);text-decoration:none;cursor:pointer;}
   .readonly-banner{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:8px 14px;font-size:12px;margin-bottom:14px;}
   body.dark .readonly-banner{background:#3a2f10;color:#fcd34d;border-color:#5c4a12;}
-
-  /* Login */
-  /* Login modal reuses .modal-overlay / .modal styles below */
+  .setup-banner{background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:10px;padding:8px 14px;font-size:12px;margin-bottom:14px;}
+  body.dark .setup-banner{background:#1e1b4b;color:#c7d2fe;border-color:#3730a3;}
 
   /* Dashboard */
   .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px;}
@@ -60,16 +59,24 @@
   .flat-card.vacant{border-color:var(--gray);}
   .flat-card .flatnum{font-weight:700;font-size:14px;}
   .flat-card .badge{font-size:9px;margin-top:2px;}
-  .flat-card .parking-icons{position:absolute;bottom:6px;font-size:10px;color:var(--muted);}
+  .flat-card .parking-icons{position:absolute;bottom:6px;font-size:18px;display:flex;gap:4px;align-items:center;justify-content:center;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));}
+  .flat-card .parking-icons span{display:inline-block;transform:perspective(60px) rotateX(8deg);}
+  .flat-card.locked{cursor:default;}
+  .flat-card .lock-icon{position:absolute;top:6px;right:6px;font-size:12px;background:rgba(17,24,39,.75);color:#fbbf24;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3);z-index:3;}
+  /* Hover preview: only rendered for locked (guest/viewer) cards */
   .flat-hover-info{
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     background:rgba(17,24,39,.92);color:#fff;border-radius:50%;
     width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
     opacity:0;pointer-events:none;transition:opacity .15s;padding:10px;text-align:center;
   }
-  .flat-card:hover .flat-hover-info{opacity:1;}
+  .flat-card:hover .flat-hover-info{opacity:1;pointer-events:auto;}
+  .flat-hover-info .havatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.6);margin-bottom:4px;}
+  .flat-hover-info .havatar.initials{display:flex;align-items:center;justify-content:center;background:var(--indigo);font-size:14px;font-weight:700;}
   .flat-hover-info .hname{font-size:12px;font-weight:600;line-height:1.2;word-break:break-word;}
-  .flat-hover-info .hmobile{font-size:11px;margin-top:4px;opacity:.85;}
+  .flat-hover-info .hmobile{font-size:11px;margin-top:3px;opacity:.85;}
+  .flat-hover-info .hcall{margin-top:6px;font-size:11px;font-weight:600;background:#16a34a;color:#fff;border-radius:12px;padding:3px 10px;text-decoration:none;pointer-events:auto;}
+  .flat-hover-info .hcall:hover{background:#15803d;}
 
   .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);}
   .tab-btn{padding:10px 16px;background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;}
@@ -97,6 +104,41 @@
   .footer-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}
   .role-pill{font-size:10px;text-transform:uppercase;background:var(--bg);padding:2px 8px;border-radius:20px;margin-left:6px;}
   .error-text{color:#ef4444;font-size:13px;margin:6px 0;}
+  .hint-text{color:var(--muted);font-size:12px;margin:6px 0;}
+  .access-log-list{max-height:560px;overflow-y:auto;}
+  .access-log-row{padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .access-log-row:last-child{border-bottom:none;}
+  .access-log-flat{font-weight:600;}
+  .access-log-time{color:var(--muted);font-size:12px;white-space:nowrap;}
+  .mobile-table{border-collapse:collapse;margin:4px 0;}
+  .mobile-table td{padding:2px 10px 2px 0;font-size:14px;vertical-align:middle;}
+  .mobile-table td.mlabel{color:var(--muted);font-weight:600;white-space:nowrap;font-size:12px;padding-right:8px;}
+  .hmobile-table{border-collapse:collapse;margin:3px 0 0;}
+  .hmobile-table td{padding:0 6px 0 0;font-size:11px;vertical-align:middle;opacity:.9;}
+  .hmobile-table td.mlabel{opacity:.7;white-space:nowrap;padding-right:4px;}
+  .hcall-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;justify-content:center;}
+  /* When #flatGrid holds a single block of prose (the guest-gate, or the
+     "no results" message) instead of flat-card grid items, drop the grid
+     layout entirely — otherwise auto-fill still lays out 110px-wide empty
+     tracks and squeezes the one real child into a single narrow column,
+     wrapping its text one word per line. */
+  .flat-grid.full-width{display:block;}
+  .guest-gate{padding:44px 20px;text-align:center;max-width:420px;margin:0 auto;}
+  .guest-gate .gg-icon{font-size:34px;margin-bottom:10px;}
+  .guest-gate p{color:var(--muted);font-size:13px;max-width:360px;margin:6px auto 16px;}
+  .dues-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .dues-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
+  .dues-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .dues-table tr:last-child td{border-bottom:none;}
+  .due-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;display:inline-block;}
+  .due-badge.paid{background:#dcfce7;color:#166534;}
+  .due-badge.pending{background:#fee2e2;color:#991b1b;}
+  .due-badge.not_recorded{background:#f3f4f6;color:#6b7280;}
+  body.dark .due-badge.paid{background:#14532d;color:#86efac;}
+  body.dark .due-badge.pending{background:#7f1d1d;color:#fca5a5;}
+  body.dark .due-badge.not_recorded{background:#374151;color:#d1d5db;}
+  .otp-display{letter-spacing:8px;font-size:26px;font-weight:700;text-align:center;background:var(--bg);border:1px dashed var(--border);border-radius:10px;padding:12px;margin:12px 0;color:var(--indigo);}
+  .otp-input{letter-spacing:8px;font-size:20px;text-align:center;font-weight:600;}
   .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px;}
   @keyframes spin{to{transform:rotate(360deg);}}
   #loadingOverlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);z-index:9999;}
@@ -106,7 +148,7 @@
 
 <div id="loadingOverlay"><span class="spinner" style="border-color:rgba(79,70,229,.3);border-top-color:var(--indigo);"></span>&nbsp;Loading portal…</div>
 
-<!-- LOGIN MODAL (opened via header "Login" link) -->
+<!-- LOGIN / FIRST-RUN ADMIN SETUP MODAL -->
 <div id="loginModalRoot"></div>
 
 <!-- APP -->
@@ -123,10 +165,11 @@
   <div class="container">
     <div class="tabs" id="tabBar">
       <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" data-tab="dues" onclick="switchTab('dues')">Dues</button>
       <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+      <button class="tab-btn" data-tab="accesslog" onclick="switchTab('accesslog')">Access Log</button>
       <button class="tab-btn" data-tab="backup" onclick="switchTab('backup')">Backup & Data</button>
     </div>
-
 
     <!-- DASHBOARD TAB -->
     <div id="tab-dashboard">
@@ -146,6 +189,27 @@
       </div>
 
       <div id="flatGrid" class="flat-grid"></div>
+    </div>
+
+    <!-- DUES TAB (admin + supervisor only — financial data) -->
+    <div id="tab-dues" class="hidden">
+      <div id="duesReadonlyBanner" class="readonly-banner hidden">👁️ You have view-only access to Dues. Only an admin can record payments here.</div>
+      <div class="stats-grid" id="duesStatsGrid"></div>
+      <div class="toolbar">
+        <select id="duesMonthFilter" onchange="renderDues()"></select>
+        <select id="duesBlockFilter" onchange="renderDues()">
+          <option value="">All Blocks</option>
+        </select>
+        <select id="duesStatusFilter" onchange="renderDues()">
+          <option value="">All BWSSB Status</option>
+          <option value="paid">Paid</option>
+          <option value="pending">Pending</option>
+          <option value="not_recorded">Not Recorded</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow-x:auto;">
+        <table class="dues-table" id="duesTable"></table>
+      </div>
     </div>
 
     <!-- SETTINGS TAB -->
@@ -175,8 +239,8 @@
       <div class="card" style="padding:20px;max-width:480px;margin-top:16px;" id="userMgmtCard">
         <h3 style="margin-top:0;">Users</h3>
         <p style="font-size:12px;color:var(--muted);margin-top:-8px;">
-          <strong>Admin</strong>: full edit access. <strong>Supervisor</strong>: can view this section, no edits/add/remove.
-          <strong>Viewer</strong>: dashboard directory only, no admin section access.
+          <strong>Admin</strong>: full edit access, can create Supervisor and Viewer accounts below. <strong>Supervisor</strong>: can view this section, no edits/add/remove.
+          <strong>Viewer</strong>: a guest-level account — locked directory view only (same reach as a signed-out guest), no admin section access. Give this role to residents/security who should only browse the directory. Every account type's flat-detail views (Admin, Supervisor, Viewer, and anonymous Guest) are recorded in the Access Log tab.
         </p>
         <div id="userList"></div>
         <div id="addUserRow" class="hidden">
@@ -191,6 +255,23 @@
           </div>
           <button class="btn small" style="margin-top:8px;" onclick="addUser()">+ Add User</button>
         </div>
+      </div>
+    </div>
+
+    <!-- ACCESS LOG TAB (admin only) -->
+    <div id="tab-accesslog" class="hidden">
+      <div class="card" style="padding:20px;max-width:640px;">
+        <div class="section-header" style="margin-bottom:6px;">
+          <h3 style="margin:0;">Access Log</h3>
+          <div style="display:flex;gap:14px;align-items:center;">
+            <a onclick="loadAccessLog()">↻ Refresh</a>
+            <a onclick="clearAccessLog()" style="color:#ef4444;">🗑️ Clear Log</a>
+          </div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-top:0;">
+          Tracks every time a flat's member details (name, Mobile 1, Mobile 2) were opened — by Admins, Supervisors, Viewer-role accounts, and anonymous signed-out guests. Guests must verify a mobile number with a 6-digit OTP before they can browse the directory at all, and are then logged under that mobile number (instead of a generic "Guest" label) so every flat they view is traceable. Shows the flat number, who viewed it, their role, and the exact time. Entries auto-clear after 24 hours.
+        </p>
+        <div id="accessLogBody"><p class="empty">Open this tab to load the log.</p></div>
       </div>
     </div>
 
@@ -220,6 +301,36 @@
           <h3 style="font-size:14px;color:#ef4444;">⚠️ Reset All Data</h3>
           <p style="font-size:13px;color:var(--muted);">Deletes every flat/owner/tenant/vehicle record from the database. Photos already uploaded to Cloudinary are not deleted.</p>
           <button class="btn danger" onclick="resetAllData()">Erase Everything</button>
+        </div>
+
+        <div class="section-block" id="bulkImportCard">
+          <h3 style="font-size:14px;">📥 Bulk Import Flats / Owners / Tenants</h3>
+          <p style="font-size:13px;color:var(--muted);">
+            Paste a JSON array to create new flats in one go — each item is
+            <code>{"block":"A","flatNumber":"001","owner":{"name":"...","mobile1":"...","mobile2":"..."},"tenant":{"name":"...","mobile1":"...","mobile2":"..."}}</code>
+            (omit <code>tenant</code> for owner-occupied flats; <code>mobile2</code> may be null). Flats whose block + flat number already exist are skipped automatically, so this is safe to re-run with an updated sheet later.
+          </p>
+          <textarea id="bulkImportInput" rows="6" style="font-family:monospace;font-size:12px;" placeholder="[ ... ]"></textarea>
+          <div class="footer-actions" style="margin-top:8px;">
+            <button class="btn secondary" onclick="loadPresetImportData()">Load Nethravathi Sheet (120 flats)</button>
+            <button class="btn" onclick="runBulkImport()">Run Import</button>
+          </div>
+          <p id="bulkImportStatus" class="hint-text hidden"></p>
+        </div>
+
+        <div class="section-block" id="bulkImportDuesCard">
+          <h3 style="font-size:14px;">📊 Bulk Import Dues / Payments</h3>
+          <p style="font-size:13px;color:var(--muted);">
+            Paste a JSON array to load monthly BWSSB / water bill / car charge records — each item is
+            <code>{"block":"A","flatNumber":"001","month":"August","bwssbStatus":"paid","bwssbAmount":10000,"waterBill":800,"carCharge":300}</code>.
+            <code>bwssbStatus</code> is one of <code>paid</code>, <code>pending</code>, <code>not_recorded</code>. The flat must already exist (import flats first). Re-running for a month you've already loaded creates duplicate rows for that month — edit or delete individual entries from the Dues tab instead.
+          </p>
+          <textarea id="bulkImportDuesInput" rows="6" style="font-family:monospace;font-size:12px;" placeholder="[ ... ]"></textarea>
+          <div class="footer-actions" style="margin-top:8px;">
+            <button class="btn secondary" onclick="loadPresetDuesData()">Load Nethravathi Dues (Jul–Sep)</button>
+            <button class="btn" onclick="runBulkImportDues()">Run Import</button>
+          </div>
+          <p id="bulkImportDuesStatus" class="hint-text hidden"></p>
         </div>
       </div>
     </div>
@@ -296,7 +407,11 @@ async function tursoBatch(statements){
     throw new Error(`Turso error ${res.status}: ${text.slice(0,200)}`);
   }
   const data = await res.json();
-  return data.results.filter(r => r.response?.type === 'execute').map(r=>{
+  // Keep every execute result AND every error result (drop only the final
+  // 'close' ack) so a failing statement throws here, at the call site that
+  // knows what was being run — instead of silently shortening the array and
+  // breaking a later destructure/index into it.
+  return data.results.filter(r => r.type === 'error' || r.response?.type === 'execute').map(r=>{
     if(r.type === 'error') throw new Error(r.error?.message || 'Query failed');
     const result = r.response.result;
     return {
@@ -329,11 +444,103 @@ async function uploadToCloudinary(file){
   return data.secure_url;
 }
 
+
+/* ============================================================
+   SCHEMA (self-healing)
+   This app has never shipped its own CREATE TABLE statements \u2014 the
+   database was set up out-of-band, so any table/column a newer version
+   starts relying on (like the `dues` table added here) doesn't exist
+   until something creates it. Run this once at boot: CREATE TABLE IF NOT
+   EXISTS never touches a table that's already there, and each ADD COLUMN
+   is skipped once the column exists, so it's safe to run on every load.
+   ============================================================ */
+const SCHEMA_CREATE = [
+  `CREATE TABLE IF NOT EXISTS flats (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, block TEXT, flat_number TEXT,
+     status TEXT DEFAULT 'vacant', parking_available INTEGER DEFAULT 1)`,
+  `CREATE TABLE IF NOT EXISTS owners (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, flat_id INTEGER, name TEXT,
+     mobile1 TEXT, mobile2 TEXT, whatsapp TEXT, email TEXT, occupation TEXT,
+     blood_group TEXT, emergency_contact TEXT, emergency_number TEXT,
+     move_in_date TEXT, photo_url TEXT, proof_url TEXT)`,
+  `CREATE TABLE IF NOT EXISTS tenants (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, flat_id INTEGER, name TEXT,
+     mobile1 TEXT, mobile2 TEXT, whatsapp TEXT, email TEXT, company TEXT,
+     rental_start_date TEXT, rental_end_date TEXT, police_verification TEXT,
+     photo_url TEXT, agreement_url TEXT)`,
+  `CREATE TABLE IF NOT EXISTS vehicles (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, flat_id INTEGER, type TEXT,
+     number TEXT, brand TEXT, model TEXT, color TEXT, slot TEXT,
+     insurance_expiry TEXT, status TEXT DEFAULT 'active')`,
+  `CREATE TABLE IF NOT EXISTS users (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT,
+     role TEXT, full_name TEXT)`,
+  `CREATE TABLE IF NOT EXISTS settings (
+     id INTEGER PRIMARY KEY, apartment_name TEXT, contact TEXT, address TEXT,
+     bike_charge INTEGER, car_charge INTEGER)`,
+  `CREATE TABLE IF NOT EXISTS audit_log (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, action TEXT,
+     entity TEXT, entity_id INTEGER, details TEXT,
+     created_at TEXT DEFAULT (datetime('now')))`,
+  `CREATE TABLE IF NOT EXISTS dues (
+     id INTEGER PRIMARY KEY AUTOINCREMENT, flat_id INTEGER, month TEXT,
+     water_bill INTEGER, car_charge INTEGER, bwssb_status TEXT DEFAULT 'not_recorded',
+     bwssb_amount INTEGER, paid_date TEXT)`,
+];
+// Columns each table needs beyond whatever a pre-existing deployment might
+// already have, keyed by the exact names the app's own queries use.
+const SCHEMA_COLUMNS = {
+  flats:   [['block','TEXT'],['flat_number','TEXT'],['status',"TEXT DEFAULT 'vacant'"],['parking_available','INTEGER DEFAULT 1']],
+  owners:  [['flat_id','INTEGER'],['name','TEXT'],['mobile1','TEXT'],['mobile2','TEXT'],['whatsapp','TEXT'],['email','TEXT'],
+            ['occupation','TEXT'],['blood_group','TEXT'],['emergency_contact','TEXT'],['emergency_number','TEXT'],
+            ['move_in_date','TEXT'],['photo_url','TEXT'],['proof_url','TEXT']],
+  tenants: [['flat_id','INTEGER'],['name','TEXT'],['mobile1','TEXT'],['mobile2','TEXT'],['whatsapp','TEXT'],['email','TEXT'],
+            ['company','TEXT'],['rental_start_date','TEXT'],['rental_end_date','TEXT'],['police_verification','TEXT'],
+            ['photo_url','TEXT'],['agreement_url','TEXT']],
+  dues:    [['flat_id','INTEGER'],['month','TEXT'],['water_bill','INTEGER'],['car_charge','INTEGER'],
+            ['bwssb_status',"TEXT DEFAULT 'not_recorded'"],['bwssb_amount','INTEGER'],['paid_date','TEXT']],
+};
+async function ensureSchema(){
+  for(const sql of SCHEMA_CREATE){
+    try{ await tursoRun(sql); }catch(e){ console.warn('Schema create skipped:', e.message); }
+  }
+  try{ await tursoRun("INSERT OR IGNORE INTO settings (id) VALUES (1)"); }catch(e){}
+  for(const table of Object.keys(SCHEMA_COLUMNS)){
+    let existingCols = [];
+    try{
+      const r = await tursoRun(`PRAGMA table_info(${table})`);
+      existingCols = r.rows.map(row => row.name);
+    }catch(e){ console.warn(`Could not inspect ${table}:`, e.message); continue; }
+    for(const [col, type] of SCHEMA_COLUMNS[table]){
+      if(existingCols.includes(col)) continue;
+      try{ await tursoRun(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`); }
+      catch(e){ if(!/duplicate column/i.test(e.message)) console.warn(`${table}.${col}:`, e.message); }
+    }
+  }
+  // One-time cleanup: an earlier version of the dues preset stored a bare
+  // month name ("July") with no year, which collides across years once the
+  // portal is used for more than a year. Stamp 2026 onto any row still in
+  // that bare form — already-migrated rows contain a space + year and
+  // won't match, so this is safe to run on every load.
+  try{
+    await tursoRun(
+      `UPDATE dues SET month = month || ' 2026' WHERE month IN ('January','February','March','April','May','June','July','August','September','October','November','December')`
+    );
+  }catch(e){ console.warn('Dues month migration skipped:', e.message); }
+}
+
 /* ============================================================
    APP STATE
    ============================================================ */
-let DATA = { users:[], settings:{}, flats:[], owners:[], tenants:[], vehicles:[] };
+let DATA = { users:[], settings:{}, flats:[], owners:[], tenants:[], vehicles:[], dues:[] };
 let CURRENT_USER = null;
+
+// Parsed from NEW_nethravathi_Apartment_Account_details.xlsx (August Account Details sheet).
+// 120 flats across blocks A-H; mobile numbers split into mobile1/mobile2 per owner and per tenant.
+const NETHRAVATHI_IMPORT_DATA = [{"block": "A", "flatNumber": "001", "owner": {"name": "Threjavathamma / Vani", "mobile1": "9742124506", "mobile2": "9740662639"}}, {"block": "A", "flatNumber": "002", "owner": {"name": "Basavaraju/Prabhuraj", "mobile1": "9886619220", "mobile2": "8147438258"}, "tenant": {"name": "Gajendra Sethi", "mobile1": "9777333464", "mobile2": null}}, {"block": "A", "flatNumber": "003", "owner": {"name": "K Umesh Rao", "mobile1": "9743122970", "mobile2": null}}, {"block": "A", "flatNumber": "004", "owner": {"name": "Sandeep/Cheluvaraj", "mobile1": "9731978802", "mobile2": null}, "tenant": {"name": "Vinutha", "mobile1": "8618039107", "mobile2": null}}, {"block": "A", "flatNumber": "101", "owner": {"name": "Manomani/Nataraj's son Gopal", "mobile1": "8618882711", "mobile2": "8316068870"}, "tenant": {"name": "Dinakar Vasant Rao Jyothi", "mobile1": "9066880686", "mobile2": null}}, {"block": "A", "flatNumber": "102", "owner": {"name": "Nanjundaiah", "mobile1": "9448672545", "mobile2": null}, "tenant": {"name": "Karthik Kumar/Natesh", "mobile1": "9980925424", "mobile2": null}}, {"block": "A", "flatNumber": "103", "owner": {"name": "Kalyanamma", "mobile1": "9845584274", "mobile2": null}, "tenant": {"name": "Sunil Kumar", "mobile1": "7666141117", "mobile2": null}}, {"block": "A", "flatNumber": "104", "owner": {"name": "Venkatesh Kini", "mobile1": "9731628529", "mobile2": null}}, {"block": "A", "flatNumber": "201", "owner": {"name": "Rohini", "mobile1": "8050219983", "mobile2": null}, "tenant": {"name": "Das", "mobile1": "9900643252", "mobile2": null}}, {"block": "A", "flatNumber": "202", "owner": {"name": "Nanji Bai OB Naik", "mobile1": "8147254040", "mobile2": "9449073042"}, "tenant": {"name": "Vijaya Kumar", "mobile1": "8660406279", "mobile2": null}}, {"block": "A", "flatNumber": "203", "owner": {"name": "Nanji Bai OB Naik", "mobile1": "8147254040", "mobile2": "9449073042"}, "tenant": {"name": "Srikanth", "mobile1": "9686204544", "mobile2": null}}, {"block": "A", "flatNumber": "204", "owner": {"name": "Rama Murthy", "mobile1": "9845831208", "mobile2": null}, "tenant": {"name": "Arun Kumar", "mobile1": "7019752646", "mobile2": null}}, {"block": "A", "flatNumber": "301", "owner": {"name": "B Anantha Swamy", "mobile1": "8050761801", "mobile2": null}}, {"block": "A", "flatNumber": "302", "owner": {"name": "Eshwara Shetty", "mobile1": "9972552340", "mobile2": null}, "tenant": {"name": "Rakesh / Lokesh", "mobile1": "6360006366", "mobile2": null}}, {"block": "A", "flatNumber": "303", "owner": {"name": "K S Shivakumar", "mobile1": "7353751329", "mobile2": "8147190120"}}, {"block": "A", "flatNumber": "304", "owner": {"name": "Jagan", "mobile1": "9886999629", "mobile2": null}, "tenant": {"name": "Jennifer", "mobile1": "9632691901", "mobile2": null}}, {"block": "B", "flatNumber": "001", "owner": {"name": "G Miurali", "mobile1": "9591770977", "mobile2": null}}, {"block": "B", "flatNumber": "002", "owner": {"name": "H Vasudev", "mobile1": "9448451422", "mobile2": null}}, {"block": "B", "flatNumber": "003", "owner": {"name": "Chandrakeerthi", "mobile1": "9844061635", "mobile2": null}, "tenant": {"name": "Chethana Gowda", "mobile1": "7892031552", "mobile2": null}}, {"block": "B", "flatNumber": "004", "owner": {"name": "Nagamohan", "mobile1": "9035455145", "mobile2": "9945674957"}}, {"block": "B", "flatNumber": "101", "owner": {"name": "Rajesh", "mobile1": "8050505092", "mobile2": null}, "tenant": {"name": "Krishnamoorthy", "mobile1": "9880456782", "mobile2": null}}, {"block": "B", "flatNumber": "102", "owner": {"name": "Gangamma", "mobile1": "9449508460", "mobile2": "9945470497"}, "tenant": {"name": "Ekanathappa", "mobile1": "9945297028", "mobile2": null}}, {"block": "B", "flatNumber": "103", "owner": {"name": "Ravi - Son Gowtham", "mobile1": "9886219464", "mobile2": null}, "tenant": {"name": "Sujil", "mobile1": "9538111366", "mobile2": null}}, {"block": "B", "flatNumber": "104", "owner": {"name": "Ravi", "mobile1": "9980016720", "mobile2": null}, "tenant": {"name": "Umesh Sheethal", "mobile1": "9482002039", "mobile2": null}}, {"block": "B", "flatNumber": "201", "owner": {"name": "Veerabasaiah", "mobile1": "7204406900", "mobile2": null}}, {"block": "B", "flatNumber": "202", "owner": {"name": "Veerabasaiah", "mobile1": "8073848899", "mobile2": null}, "tenant": {"name": "Shree Shailappa", "mobile1": "8073848899", "mobile2": null}}, {"block": "B", "flatNumber": "203", "owner": {"name": "Veerabasaiah", "mobile1": "8073848899", "mobile2": null}, "tenant": {"name": "Sachin", "mobile1": "7022149915", "mobile2": null}}, {"block": "B", "flatNumber": "204", "owner": {"name": "Girijamma", "mobile1": "7760109225", "mobile2": "9341215696"}, "tenant": {"name": "Raju", "mobile1": "7795818198", "mobile2": null}}, {"block": "B", "flatNumber": "301", "owner": {"name": "Dhanalakshmi", "mobile1": "9632864320", "mobile2": null}}, {"block": "B", "flatNumber": "302", "owner": {"name": "Harsha / Pramod Veena sujala", "mobile1": "9845639933", "mobile2": "9686464656"}, "tenant": {"name": "Saim Ram Kumar", "mobile1": "7319668555", "mobile2": null}}, {"block": "B", "flatNumber": "303", "owner": {"name": "Mallappan - son Nithin Shilpa", "mobile1": "8618688300", "mobile2": "7760028410"}}, {"block": "B", "flatNumber": "304", "owner": {"name": "Keerthi H K", "mobile1": "7676855788", "mobile2": null}}, {"block": "C", "flatNumber": "001", "owner": {"name": "Jayalakshmi/Nithin", "mobile1": "9972189367", "mobile2": "8660099180"}}, {"block": "C", "flatNumber": "002", "owner": {"name": "Girijamma", "mobile1": "7760109225", "mobile2": "9341215696"}}, {"block": "C", "flatNumber": "003", "owner": {"name": "Sandeep", "mobile1": "9964686229", "mobile2": null}, "tenant": {"name": "Chenna Reddy", "mobile1": "7349222979", "mobile2": null}}, {"block": "C", "flatNumber": "004", "owner": {"name": "Rekha", "mobile1": "9845480215", "mobile2": null}}, {"block": "C", "flatNumber": "101", "owner": {"name": "Vaidyanathan Y K", "mobile1": "9448291522", "mobile2": null}, "tenant": {"name": "Hanumantha Reddy", "mobile1": "9502343553", "mobile2": null}}, {"block": "C", "flatNumber": "102", "owner": {"name": "Shreemathy Suresh", "mobile1": "9110819095", "mobile2": "7767020616"}}, {"block": "C", "flatNumber": "103", "owner": {"name": "Satheesh Kumar", "mobile1": "8618922640", "mobile2": "9845093976"}}, {"block": "C", "flatNumber": "104", "owner": {"name": "Karthik Kumar", "mobile1": "9632377620", "mobile2": null}, "tenant": {"name": "BL Manjula", "mobile1": "7022445712", "mobile2": null}}, {"block": "C", "flatNumber": "201", "owner": {"name": "Amith", "mobile1": "9741598090", "mobile2": null}, "tenant": {"name": "Babu/Sukanaya", "mobile1": "9972926074", "mobile2": "8660066202"}}, {"block": "C", "flatNumber": "202", "owner": {"name": "Ramesh", "mobile1": "9980193075", "mobile2": "9008017485"}, "tenant": {"name": "Vijay Kumar", "mobile1": "9538999998", "mobile2": null}}, {"block": "C", "flatNumber": "203", "owner": {"name": "Shantha K Swamy", "mobile1": "9449172284", "mobile2": "9739489868"}}, {"block": "C", "flatNumber": "204", "owner": {"name": "Kumara Swamy", "mobile1": "9845368114", "mobile2": null}}, {"block": "C", "flatNumber": "301", "owner": {"name": "Renuka /Shitha lakshami", "mobile1": "8088576844", "mobile2": null}}, {"block": "C", "flatNumber": "302", "owner": {"name": "Bharathi", "mobile1": "6363071424", "mobile2": "7019764211"}}, {"block": "C", "flatNumber": "303", "owner": {"name": "Rajanna", "mobile1": "7899861128", "mobile2": null}}, {"block": "C", "flatNumber": "304", "owner": {"name": "Prasanna", "mobile1": "8550809555", "mobile2": null}, "tenant": {"name": "Prasanna Gowda", "mobile1": "9731493888", "mobile2": null}}, {"block": "D", "flatNumber": "001", "owner": {"name": "Lalithamma /Sundar", "mobile1": "99725170140", "mobile2": "9880265071"}}, {"block": "D", "flatNumber": "002", "owner": {"name": "Arunkumar", "mobile1": "9902252525", "mobile2": null}, "tenant": {"name": "Ammlu/Madhav", "mobile1": "8548944554", "mobile2": "8151014377"}}, {"block": "D", "flatNumber": "003", "owner": {"name": "Venu.R.Murthy", "mobile1": "9845444700", "mobile2": null}}, {"block": "D", "flatNumber": "004", "owner": {"name": "Harinarayana", "mobile1": "8618566579", "mobile2": null}, "tenant": {"name": "Krishna", "mobile1": "9449005521", "mobile2": null}}, {"block": "D", "flatNumber": "101", "owner": {"name": "Latha lokesh", "mobile1": "9448539660", "mobile2": null}, "tenant": {"name": "Ahobala Rao", "mobile1": "7259151372", "mobile2": null}}, {"block": "D", "flatNumber": "102", "owner": {"name": "Dhanalakshami", "mobile1": "7353631108", "mobile2": null}, "tenant": {"name": "Ramesh M.E", "mobile1": "9740163421", "mobile2": null}}, {"block": "D", "flatNumber": "103", "owner": {"name": "Shanthi Son Arun", "mobile1": "9742334457", "mobile2": "9845368925"}, "tenant": {"name": "Vijaykumar", "mobile1": "9986108698", "mobile2": "9986418023"}}, {"block": "D", "flatNumber": "104", "owner": {"name": "Mahendra Singh", "mobile1": "8884376441", "mobile2": null}}, {"block": "D", "flatNumber": "201", "owner": {"name": "Harish & Deepu", "mobile1": "9632440733", "mobile2": null}, "tenant": {"name": "Devaraj", "mobile1": "7349100398", "mobile2": null}}, {"block": "D", "flatNumber": "202", "owner": {"name": "Sridevi & Ramesh/Ramesh hugor", "mobile1": "7829897050", "mobile2": "9945836170"}, "tenant": {"name": "Sachin", "mobile1": "9535117302", "mobile2": null}}, {"block": "D", "flatNumber": "203", "owner": {"name": "U.M Vageshaiah", "mobile1": "9449973352", "mobile2": null}}, {"block": "D", "flatNumber": "204", "owner": {"name": "Ramesh Babu", "mobile1": "9880126617", "mobile2": null}, "tenant": {"name": "Shyama Sundar", "mobile1": "9008181805", "mobile2": null}}, {"block": "D", "flatNumber": "301", "owner": {"name": "Manjunath G.R", "mobile1": "9164004550", "mobile2": "7975861255"}}, {"block": "D", "flatNumber": "302", "owner": {"name": "Prakash Gowda", "mobile1": "9606315695", "mobile2": null}}, {"block": "D", "flatNumber": "303", "owner": {"name": "B.K.Puttaswamy", "mobile1": "9036096550", "mobile2": null}}, {"block": "D", "flatNumber": "304", "owner": {"name": "Mahalakshami", "mobile1": "9008426455", "mobile2": null}, "tenant": {"name": "Sathish Ashwini", "mobile1": "8553107037", "mobile2": null}}, {"block": "E", "flatNumber": "001", "owner": {"name": "Girish Naik/Shoba Naik", "mobile1": "8884777117", "mobile2": "8884111771"}}, {"block": "E", "flatNumber": "002", "owner": {"name": "Shilpa Nagaraj", "mobile1": "7022490010", "mobile2": null}, "tenant": {"name": "Shashidhar kote", "mobile1": "9845366221", "mobile2": null}}, {"block": "E", "flatNumber": "101", "owner": {"name": "Chenna Chani", "mobile1": "7353330449", "mobile2": null}, "tenant": {"name": "Sowmya Kiran kumar", "mobile1": null, "mobile2": null}}, {"block": "E", "flatNumber": "102", "owner": {"name": "Nischal", "mobile1": "9448259577", "mobile2": null}}, {"block": "E", "flatNumber": "201", "owner": {"name": "Suraj S.S", "mobile1": "9902803258", "mobile2": null}, "tenant": {"name": "Mriraj", "mobile1": "8951838609", "mobile2": null}}, {"block": "E", "flatNumber": "202", "owner": {"name": "Jagadesh Naik", "mobile1": "9980308218", "mobile2": null}, "tenant": {"name": "D.V Joshi", "mobile1": "9066880686", "mobile2": null}}, {"block": "E", "flatNumber": "301", "owner": {"name": "D.R.N.Rajesh", "mobile1": "9880520222", "mobile2": "6360830860"}}, {"block": "E", "flatNumber": "302", "owner": {"name": "Parameshwarappa", "mobile1": "9448536604", "mobile2": "9449621316"}, "tenant": {"name": "Gopi Shanth", "mobile1": "9632314405", "mobile2": "7975569918"}}, {"block": "E", "flatNumber": "003", "owner": {"name": "Geetha Mahesh", "mobile1": "8217617084", "mobile2": "9448403195"}, "tenant": {"name": "Rashmi", "mobile1": "8884531188", "mobile2": null}}, {"block": "E", "flatNumber": "004", "owner": {"name": "Neelamma", "mobile1": "9845028920", "mobile2": null}}, {"block": "E", "flatNumber": "103", "owner": {"name": "Krishnamurthy", "mobile1": "9880456782", "mobile2": null}}, {"block": "E", "flatNumber": "104", "owner": {"name": "Manjunatha.M", "mobile1": "9008114157", "mobile2": null}}, {"block": "E", "flatNumber": "203", "owner": {"name": "Nagamani", "mobile1": "9591135708", "mobile2": null}, "tenant": {"name": "Srikhanth", "mobile1": "9845229880", "mobile2": null}}, {"block": "E", "flatNumber": "204", "owner": {"name": "Venkatesh murthy", "mobile1": "9448318038", "mobile2": null}, "tenant": {"name": "Shruthi", "mobile1": "9148389875", "mobile2": "9187554402"}}, {"block": "E", "flatNumber": "303", "owner": {"name": "Ajay jyothi", "mobile1": "9964966205", "mobile2": null}}, {"block": "E", "flatNumber": "304", "owner": {"name": "Gopesh", "mobile1": "9325985918", "mobile2": null}}, {"block": "F", "flatNumber": "001", "owner": {"name": "Sharath Sowmya", "mobile1": "9164492266", "mobile2": null}, "tenant": {"name": "Prakash Sumithra", "mobile1": "8150814105", "mobile2": "9964105154"}}, {"block": "F", "flatNumber": "002", "owner": {"name": "Srinivasa", "mobile1": "9886831037", "mobile2": null}, "tenant": {"name": "Hari Rajeshwari", "mobile1": "98852066896", "mobile2": null}}, {"block": "F", "flatNumber": "101", "owner": {"name": "K.N Ramachandra", "mobile1": "9448829043", "mobile2": null}}, {"block": "F", "flatNumber": "102", "owner": {"name": "Manjula/ R.Shanumukhan", "mobile1": "9480688781", "mobile2": null}, "tenant": {"name": "Ragini", "mobile1": "9880239123", "mobile2": null}}, {"block": "F", "flatNumber": "201", "owner": {"name": "N.munirathanamma", "mobile1": "9945490898", "mobile2": null}, "tenant": {"name": "Pavan", "mobile1": "9902773972", "mobile2": null}}, {"block": "F", "flatNumber": "202", "owner": {"name": "Rani", "mobile1": "7406063988", "mobile2": null}}, {"block": "F", "flatNumber": "301", "owner": {"name": "Kavitha Sandeep", "mobile1": "9480560185", "mobile2": "9986304222"}}, {"block": "F", "flatNumber": "302", "owner": {"name": "Chandrashekar", "mobile1": "8971256214", "mobile2": null}}, {"block": "F", "flatNumber": "003", "owner": {"name": "Madhu", "mobile1": "9916480800", "mobile2": null}, "tenant": {"name": "Dhasarath", "mobile1": "8884950476", "mobile2": null}}, {"block": "F", "flatNumber": "004", "owner": {"name": "Vital", "mobile1": "7892428324", "mobile2": null}}, {"block": "F", "flatNumber": "103", "owner": {"name": "N.Rajakumar", "mobile1": "9742529085", "mobile2": null}}, {"block": "F", "flatNumber": "104", "owner": {"name": "Radha Vinya", "mobile1": "9535020783", "mobile2": null}, "tenant": {"name": "Rajini", "mobile1": null, "mobile2": null}}, {"block": "F", "flatNumber": "203", "owner": {"name": "Basavaraj Shilpa", "mobile1": "9945231251", "mobile2": "7829496223"}}, {"block": "F", "flatNumber": "204", "owner": {"name": "Sujatha Rajesh", "mobile1": "8660067648", "mobile2": null}}, {"block": "F", "flatNumber": "303", "owner": {"name": "Vijayasubramani /Aishwarya", "mobile1": "9187512472", "mobile2": "7760592817"}}, {"block": "F", "flatNumber": "304", "owner": {"name": "Nithin N Chvada", "mobile1": "9036594161", "mobile2": null}, "tenant": {"name": "Varun", "mobile1": "7406454145", "mobile2": null}}, {"block": "G", "flatNumber": "001", "owner": {"name": "Khantharaju", "mobile1": "9741499962", "mobile2": null}, "tenant": {"name": "B.K.Lokesh", "mobile1": "9900274149", "mobile2": null}}, {"block": "G", "flatNumber": "002", "owner": {"name": "Maheshwari /Ravikumar", "mobile1": "9341217875", "mobile2": null}}, {"block": "G", "flatNumber": "101", "owner": {"name": "D.R.Mohan", "mobile1": null, "mobile2": null}}, {"block": "G", "flatNumber": "102", "owner": {"name": "K.P.Panchakshari", "mobile1": "7899905265", "mobile2": null}}, {"block": "G", "flatNumber": "201", "owner": {"name": "M.K.Shivakumar", "mobile1": "9743926223", "mobile2": "9448051250"}, "tenant": {"name": "Nagarathan", "mobile1": "9680435561", "mobile2": null}}, {"block": "G", "flatNumber": "202", "owner": {"name": "Mahadeva", "mobile1": "9964601377", "mobile2": null}, "tenant": {"name": "Srinivasa", "mobile1": "9008747429", "mobile2": null}}, {"block": "G", "flatNumber": "301", "owner": {"name": "Varadhana raju", "mobile1": "9845263451", "mobile2": null}, "tenant": {"name": "Yogesh deepak", "mobile1": "8867828431", "mobile2": null}}, {"block": "G", "flatNumber": "302", "owner": {"name": "Ramanjanaiah", "mobile1": "9880958967", "mobile2": null}, "tenant": {"name": "Ravi Kumar", "mobile1": "8546854165", "mobile2": "9900735403"}}, {"block": "G", "flatNumber": "003", "owner": {"name": "Uday Shankar", "mobile1": "9980976156", "mobile2": null}, "tenant": {"name": "H.N.Shivakumar", "mobile1": "7795162973", "mobile2": "9611632548"}}, {"block": "G", "flatNumber": "004", "owner": {"name": "Ravikumar", "mobile1": "8105495160", "mobile2": null}}, {"block": "G", "flatNumber": "103", "owner": {"name": "Shashikala", "mobile1": "9513467222", "mobile2": null}}, {"block": "G", "flatNumber": "104", "owner": {"name": "Ganesh Kumar", "mobile1": "7892215635", "mobile2": null}}, {"block": "G", "flatNumber": "203", "owner": {"name": "Jagadeesh", "mobile1": "9380210730", "mobile2": null}, "tenant": {"name": "Ganesh K", "mobile1": "8970704040", "mobile2": null}}, {"block": "G", "flatNumber": "204", "owner": {"name": "Rajarathan", "mobile1": "6360008502", "mobile2": null}, "tenant": {"name": "Susheela /Srinivasa", "mobile1": "6363547239", "mobile2": "8861890831"}}, {"block": "G", "flatNumber": "303", "owner": {"name": "Sujatha", "mobile1": "7337736273", "mobile2": null}}, {"block": "G", "flatNumber": "304", "owner": {"name": "Anupkumar", "mobile1": "9611811737", "mobile2": null}}, {"block": "H", "flatNumber": "001", "owner": {"name": "Gurubasappa", "mobile1": "9945332137", "mobile2": null}}, {"block": "H", "flatNumber": "002", "owner": {"name": "Raghavendra", "mobile1": "9964601377", "mobile2": null}, "tenant": {"name": "Lakshamana", "mobile1": "9148033318", "mobile2": null}}, {"block": "H", "flatNumber": "101", "owner": {"name": "Anilkumar Mayuramani", "mobile1": "9945409937", "mobile2": null}}, {"block": "H", "flatNumber": "102", "owner": {"name": "Shilp Krishnappa", "mobile1": "9844674726", "mobile2": "9591047038"}, "tenant": {"name": "Rekha", "mobile1": "9148049664", "mobile2": null}}, {"block": "H", "flatNumber": "201", "owner": {"name": "Madhusudhan", "mobile1": "8660548542", "mobile2": "7406024734"}}, {"block": "H", "flatNumber": "202", "owner": {"name": "Bolagotial", "mobile1": "8553854063", "mobile2": "8123102024"}}, {"block": "H", "flatNumber": "301", "owner": {"name": "D.N.Deenesh", "mobile1": "9880477923", "mobile2": "9591692275"}}, {"block": "H", "flatNumber": "302", "owner": {"name": "Rohith Kuamar", "mobile1": "8884638741", "mobile2": null}}];
+// Same source spreadsheet's July/August/September BWSSB + water bill + car charge
+// columns, one entry per flat per month that had data recorded.
+const NETHRAVATHI_DUES_DATA = [{"block": "A", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 600, "carCharge": null}, {"block": "A", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "003", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "003", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "003", "month": "September 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": 0}, {"block": "A", "flatNumber": "004", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 5000, "waterBill": 0, "carCharge": null}, {"block": "A", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 1400, "carCharge": null}, {"block": "A", "flatNumber": "103", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "104", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "201", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "202", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "203", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "203", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 800, "carCharge": 300}, {"block": "A", "flatNumber": "204", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": 300}, {"block": "A", "flatNumber": "204", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "301", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "A", "flatNumber": "303", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 0, "carCharge": null}, {"block": "A", "flatNumber": "303", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "304", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "A", "flatNumber": "304", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "B", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 1600, "carCharge": null}, {"block": "B", "flatNumber": "002", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "B", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "003", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "003", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "B", "flatNumber": "004", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": 300}, {"block": "B", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": 300}, {"block": "B", "flatNumber": "103", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "B", "flatNumber": "104", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "203", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 0, "carCharge": null}, {"block": "B", "flatNumber": "204", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "B", "flatNumber": "204", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "301", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "B", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "B", "flatNumber": "302", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "B", "flatNumber": "303", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "B", "flatNumber": "304", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "B", "flatNumber": "304", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "002", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "C", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 700, "carCharge": null}, {"block": "C", "flatNumber": "003", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "004", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "C", "flatNumber": "004", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "103", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 0, "carCharge": null}, {"block": "C", "flatNumber": "104", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 0, "carCharge": null}, {"block": "C", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 0, "carCharge": null}, {"block": "C", "flatNumber": "202", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "C", "flatNumber": "203", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 400, "carCharge": null}, {"block": "C", "flatNumber": "204", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "C", "flatNumber": "303", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "C", "flatNumber": "304", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": 300}, {"block": "D", "flatNumber": "001", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "D", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "D", "flatNumber": "002", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "D", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": 300}, {"block": "D", "flatNumber": "003", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "D", "flatNumber": "004", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "D", "flatNumber": "004", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 400, "carCharge": null}, {"block": "D", "flatNumber": "101", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "D", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "D", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "D", "flatNumber": "103", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "D", "flatNumber": "104", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "D", "flatNumber": "104", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "D", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "D", "flatNumber": "202", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 15000, "waterBill": null, "carCharge": null}, {"block": "D", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "D", "flatNumber": "203", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "D", "flatNumber": "204", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": 300}, {"block": "D", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "D", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": 300}, {"block": "D", "flatNumber": "302", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "D", "flatNumber": "303", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "D", "flatNumber": "304", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "D", "flatNumber": "304", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "E", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "E", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": 300}, {"block": "E", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 0, "carCharge": null}, {"block": "E", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": 300}, {"block": "E", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "E", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "E", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "E", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "E", "flatNumber": "003", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "E", "flatNumber": "004", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 700, "carCharge": null}, {"block": "E", "flatNumber": "103", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "E", "flatNumber": "104", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "E", "flatNumber": "203", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "E", "flatNumber": "204", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 0, "carCharge": null}, {"block": "E", "flatNumber": "303", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 1600, "carCharge": null}, {"block": "E", "flatNumber": "304", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "002", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "F", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 1600, "carCharge": 600}, {"block": "F", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "F", "flatNumber": "003", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 0, "carCharge": null}, {"block": "F", "flatNumber": "004", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 0, "carCharge": null}, {"block": "F", "flatNumber": "103", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "104", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 700, "carCharge": null}, {"block": "F", "flatNumber": "203", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "204", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "303", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 5000, "waterBill": 800, "carCharge": null}, {"block": "F", "flatNumber": "304", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 10000, "carCharge": null}, {"block": "G", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": null}, {"block": "G", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 1000, "carCharge": null}, {"block": "G", "flatNumber": "301", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "G", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "G", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "003", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "004", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 0, "carCharge": null}, {"block": "G", "flatNumber": "004", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "G", "flatNumber": "103", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "G", "flatNumber": "104", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "203", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "G", "flatNumber": "203", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "G", "flatNumber": "204", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 800, "carCharge": 300}, {"block": "G", "flatNumber": "303", "month": "August 2026", "bwssbStatus": "pending", "bwssbAmount": 0, "waterBill": 1600, "carCharge": 600}, {"block": "G", "flatNumber": "304", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "H", "flatNumber": "001", "month": "July 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "H", "flatNumber": "001", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": 300}, {"block": "H", "flatNumber": "002", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "H", "flatNumber": "002", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "H", "flatNumber": "101", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": 800, "carCharge": 300}, {"block": "H", "flatNumber": "102", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "H", "flatNumber": "102", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}, {"block": "H", "flatNumber": "201", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "H", "flatNumber": "202", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "H", "flatNumber": "301", "month": "August 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": 800, "carCharge": null}, {"block": "H", "flatNumber": "301", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 10000, "waterBill": null, "carCharge": null}, {"block": "H", "flatNumber": "302", "month": "August 2026", "bwssbStatus": "not_recorded", "bwssbAmount": null, "waterBill": 800, "carCharge": null}, {"block": "H", "flatNumber": "302", "month": "September 2026", "bwssbStatus": "paid", "bwssbAmount": 20000, "waterBill": null, "carCharge": null}];
 
 function logAudit(action, entity, entityId, details){
   // fire-and-forget; never block the UI on audit logging
@@ -344,18 +551,20 @@ function logAudit(action, entity, entityId, details){
 }
 
 async function loadAllData(){
-  const [flats, owners, tenants, vehicles, users, settings] = await tursoBatch([
+  const [flats, owners, tenants, vehicles, users, settings, dues] = await tursoBatch([
     { sql:'SELECT * FROM flats ORDER BY block, flat_number' },
     { sql:'SELECT * FROM owners' },
     { sql:'SELECT * FROM tenants' },
     { sql:'SELECT * FROM vehicles' },
     { sql:'SELECT id, username, role, full_name FROM users' }, // never fetch passwords in bulk
     { sql:'SELECT * FROM settings WHERE id=1' },
+    { sql:'SELECT * FROM dues' },
   ]);
   DATA.flats = flats.rows.map(f=>({ id:f.id, block:f.block, flatNumber:f.flat_number, status:f.status, parkingAvailable: !!f.parking_available }));
   DATA.owners = owners.rows.map(o=>({ ...o, flatId:o.flat_id, bloodGroup:o.blood_group, emergencyContact:o.emergency_contact, emergencyNumber:o.emergency_number, moveInDate:o.move_in_date, photoUrl:o.photo_url, proofUrl:o.proof_url }));
   DATA.tenants = tenants.rows.map(t=>({ ...t, flatId:t.flat_id, rentalStartDate:t.rental_start_date, rentalEndDate:t.rental_end_date, policeVerification:t.police_verification, photoUrl:t.photo_url, agreementUrl:t.agreement_url }));
   DATA.vehicles = vehicles.rows.map(v=>({ ...v, flatId:v.flat_id, insuranceExpiry:v.insurance_expiry }));
+  DATA.dues = dues.rows.map(d=>({ ...d, flatId:d.flat_id, bwssbStatus:d.bwssb_status, bwssbAmount:d.bwssb_amount, waterBill:d.water_bill, carCharge:d.car_charge, paidDate:d.paid_date }));
   DATA.users = users.rows;
   const s = settings.rows[0] || {};
   DATA.settings = { apartmentName:s.apartment_name, contact:s.contact, address:s.address, bikeCharge:s.bike_charge, carCharge:s.car_charge };
@@ -363,8 +572,13 @@ async function loadAllData(){
 
 /* ============================================================
    AUTH
+   No admin account exists yet  -> first-run "Create Admin Account" setup
+   Admin account(s) already exist -> normal Sign In modal
    ============================================================ */
+function hasAdminAccount(){ return DATA.users.some(u=>u.role==='admin'); }
+
 function openLoginModal(){
+  if(!hasAdminAccount()){ openAdminSetupModal(); return; }
   document.getElementById('loginModalRoot').innerHTML = `
   <div class="modal-overlay" onclick="if(event.target===this) closeLoginModal()">
     <div class="modal" style="max-width:340px;text-align:center;">
@@ -372,7 +586,7 @@ function openLoginModal(){
         <h2 style="margin:0;">Sign In</h2>
         <button class="close-x" onclick="closeLoginModal()">✕</button>
       </div>
-      <div class="field" style="text-align:left;"><label>Username</label><input id="loginUser" placeholder="admin"></div>
+      <div class="field" style="text-align:left;"><label>Username</label><input id="loginUser" placeholder="Username"></div>
       <div class="field" style="text-align:left;"><label>Password</label><input id="loginPass" type="password" placeholder="••••••"></div>
       <p id="loginError" class="error-text hidden"></p>
       <button class="btn" style="width:100%;margin-top:8px;" onclick="doLogin()">Sign In</button>
@@ -381,6 +595,55 @@ function openLoginModal(){
   document.getElementById('loginUser').focus();
 }
 function closeLoginModal(){ document.getElementById('loginModalRoot').innerHTML=''; }
+
+// First-run setup: no admin exists in the users table yet, so walk the
+// person through creating the very first admin account instead of a plain
+// login form.
+function openAdminSetupModal(){
+  document.getElementById('loginModalRoot').innerHTML = `
+  <div class="modal-overlay">
+    <div class="modal" style="max-width:360px;text-align:center;">
+      <div class="modal-header">
+        <h2 style="margin:0;">Create Admin Account</h2>
+      </div>
+      <p class="hint-text" style="text-align:left;">No admin account exists yet. Set one up now — you'll use these credentials to sign in and manage the portal.</p>
+      <div class="field" style="text-align:left;"><label>Admin Username</label><input id="setupUser" placeholder="e.g. admin"></div>
+      <div class="field" style="text-align:left;"><label>Admin Password (min 4 chars)</label><input id="setupPass" type="password" placeholder="••••••"></div>
+      <div class="field" style="text-align:left;"><label>Confirm Password</label><input id="setupPass2" type="password" placeholder="••••••"></div>
+      <p id="setupError" class="error-text hidden"></p>
+      <button class="btn" style="width:100%;margin-top:8px;" onclick="doAdminSetup()">Create Admin Account</button>
+    </div>
+  </div>`;
+  document.getElementById('setupUser').focus();
+}
+async function doAdminSetup(){
+  const username = document.getElementById('setupUser').value.trim();
+  const pass = document.getElementById('setupPass').value;
+  const pass2 = document.getElementById('setupPass2').value;
+  const errEl = document.getElementById('setupError');
+  errEl.classList.add('hidden');
+  if(!username){ errEl.textContent='Username is required.'; errEl.classList.remove('hidden'); return; }
+  if(!pass || pass.length<4){ errEl.textContent='Password must be at least 4 characters.'; errEl.classList.remove('hidden'); return; }
+  if(pass!==pass2){ errEl.textContent='Passwords do not match.'; errEl.classList.remove('hidden'); return; }
+  try{
+    await loadAllData(); // re-check in case another admin was created meanwhile
+    if(hasAdminAccount()){ errEl.textContent='An admin account already exists — please sign in instead.'; errEl.classList.remove('hidden'); openLoginModal(); return; }
+    if(DATA.users.some(u=>u.username===username)){ errEl.textContent='That username is already taken.'; errEl.classList.remove('hidden'); return; }
+    await tursoRun('INSERT INTO users (username, password, role, full_name) VALUES (?,?,?,?)', [username, pass, 'admin', username]);
+    await loadAllData();
+    CURRENT_USER = DATA.users.find(u=>u.username===username) ? { ...DATA.users.find(u=>u.username===username), password: pass } : { username, password: pass, role:'admin' };
+    sessionStorage.setItem('apm_session', JSON.stringify(CURRENT_USER));
+    closeLoginModal();
+    refreshPermissionsUI();
+    renderSettingsForm();
+    renderUserList();
+    renderFlats();
+    switchTab('dashboard');
+    showToast(`Admin account "${username}" created. You are now signed in.`);
+  }catch(e){
+    errEl.textContent = e.message; errEl.classList.remove('hidden');
+  }
+}
 
 async function doLogin(){
   const u = document.getElementById('loginUser').value.trim();
@@ -396,6 +659,7 @@ async function doLogin(){
     refreshPermissionsUI();
     renderSettingsForm();
     renderUserList();
+    renderFlats();
     switchTab('dashboard');
     showToast(`Signed in as ${CURRENT_USER.username}.`);
   }catch(e){
@@ -406,16 +670,110 @@ function doLogout(){
   sessionStorage.removeItem('apm_session');
   CURRENT_USER = null;
   refreshPermissionsUI();
+  renderFlats();
   switchTab('dashboard');
   showToast('Logged out — viewing as guest.');
 }
 
+/* ---- Guest mobile + OTP verification ----
+   Anonymous (signed-out) visitors must verify a mobile number before they
+   can browse the flat directory at all. This app has no SMS gateway wired
+   up, so the 6-digit OTP is generated locally and shown on screen for the
+   guest to re-enter — it's an identification/friction step, not a real
+   SMS OTP. Swap the "display" step in sendGuestOtp() for a real SMS API
+   call later if one gets connected.
+   Once verified, the guest's mobile number (not the word "Guest") is used
+   as their identity for the rest of the session — every flat they view or
+   hover over is recorded against that number in the Access Log, so guest
+   activity is fully tracked. Login-based Viewer accounts skip this, since
+   they're already identified by username/password.
+*/
+let PENDING_GUEST_OTP = null; // { mobile, code } while a guest is mid-verification
+
+function getGuestSession(){
+  try{ return JSON.parse(sessionStorage.getItem('apm_guest_session')||'null'); }catch(e){ return null; }
+}
+function hasVerifiedGuest(){ return !!getGuestSession()?.mobile; }
+// True only for a signed-out visitor who hasn't completed mobile+OTP verification yet.
+function needsGuestVerification(){ return !CURRENT_USER && !hasVerifiedGuest(); }
+
+function openGuestVerifyModal(){
+  document.getElementById('loginModalRoot').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeLoginModal()">
+    <div class="modal" style="max-width:360px;text-align:center;">
+      <div class="modal-header">
+        <h2 style="margin:0;">Verify to View Directory</h2>
+        <button class="close-x" onclick="closeLoginModal()">✕</button>
+      </div>
+      <p class="hint-text" style="text-align:left;">Enter your mobile number to browse the flat directory. Your activity will be logged for the admin.</p>
+      <div class="field" style="text-align:left;"><label>Your Mobile Number (10 digits)</label><input id="guestMobileInput" placeholder="9XXXXXXXXX" maxlength="10" inputmode="numeric"></div>
+      <p id="guestVerifyError" class="error-text hidden"></p>
+      <button class="btn" style="width:100%;margin-top:8px;" onclick="sendGuestOtp()">Send OTP</button>
+    </div>
+  </div>`;
+  document.getElementById('guestMobileInput').focus();
+}
+function sendGuestOtp(){
+  const mobile = document.getElementById('guestMobileInput').value.trim();
+  const errEl = document.getElementById('guestVerifyError');
+  if(!/^\d{10}$/.test(mobile)){ errEl.textContent='Enter a valid 10-digit mobile number.'; errEl.classList.remove('hidden'); return; }
+  errEl.classList.add('hidden');
+  const code = String(Math.floor(100000 + Math.random()*900000));
+  PENDING_GUEST_OTP = { mobile, code };
+  logAudit('OTP_SENT','guest_verify', null, `${mobile}::${new Date().toISOString()}`);
+
+  document.getElementById('loginModalRoot').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeLoginModal()">
+    <div class="modal" style="max-width:360px;text-align:center;">
+      <div class="modal-header">
+        <h2 style="margin:0;">Enter OTP</h2>
+        <button class="close-x" onclick="closeLoginModal()">✕</button>
+      </div>
+      <p class="hint-text" style="text-align:left;">No SMS gateway is configured yet, so your one-time code is shown below — enter it back to confirm it's you.</p>
+      <div class="otp-display">${code}</div>
+      <div class="field" style="text-align:left;"><label>Enter the 6-digit code</label><input id="guestOtpInput" class="otp-input" maxlength="6" inputmode="numeric"></div>
+      <p id="guestOtpError" class="error-text hidden"></p>
+      <button class="btn" style="width:100%;margin-top:8px;" onclick="verifyGuestOtp()">Verify & Continue</button>
+      <p style="margin-top:10px;"><a onclick="openGuestVerifyModal()" style="font-size:12px;">← Change number</a></p>
+    </div>
+  </div>`;
+  document.getElementById('guestOtpInput').focus();
+}
+function verifyGuestOtp(){
+  const entered = document.getElementById('guestOtpInput').value.trim();
+  const errEl = document.getElementById('guestOtpError');
+  if(!PENDING_GUEST_OTP){ errEl.textContent='OTP expired — please request a new one.'; errEl.classList.remove('hidden'); return; }
+  if(entered !== PENDING_GUEST_OTP.code){ errEl.textContent='Incorrect OTP. Please try again.'; errEl.classList.remove('hidden'); return; }
+  const mobile = PENDING_GUEST_OTP.mobile;
+  const session = { mobile, verifiedAt: new Date().toISOString() };
+  sessionStorage.setItem('apm_guest_session', JSON.stringify(session));
+  PENDING_GUEST_OTP = null;
+  logAudit('GUEST_VERIFIED','guest_verify', null, `${mobile}::${session.verifiedAt}`);
+  closeLoginModal();
+  refreshPermissionsUI();
+  renderFlats();
+  showToast('Verified — your activity in the directory is now being logged.');
+}
+function guestLogout(){
+  // Full, safe teardown of the guest session: drop the verified-guest
+  // record, cancel any OTP flow still mid-flight, and close whatever flat
+  // modal happens to be open so nothing from the session lingers on screen.
+  const g = getGuestSession();
+  sessionStorage.removeItem('apm_guest_session');
+  PENDING_GUEST_OTP = null;
+  closeModal();
+  if(g) logAudit('GUEST_LOGOUT','guest_verify', null, `${g.mobile}::${new Date().toISOString()}`);
+  refreshPermissionsUI();
+  renderFlats();
+  showToast('Logged out — you’ll need to verify your mobile again to browse the directory.');
+}
+
 /* ---- Permissions ----
-   No login (guest)   : read-only, dashboard directory only (same reach as viewer)
-   viewer             : read-only, dashboard directory only (no settings/backup tabs at all)
-   supervisor         : can open the admin Settings section (incl. Users list) to VIEW only —
-                        no editing settings, no add/remove users, no backup/reset
-   admin              : full edit, settings, user management, backup/reset
+   No login (guest)   : LOCKED — directory only, hover preview, no full details
+   viewer              : LOCKED — same reach as guest (no full details, no admin tabs)
+   supervisor          : can open the admin Settings section (incl. Users list) to VIEW only —
+                         no editing settings, no add/remove users, no backup/reset. Full flat details unlocked.
+   admin               : full edit, settings, user management, backup/reset. Full flat details unlocked.
 */
 function isAdmin(){ return CURRENT_USER?.role === 'admin'; }
 function isSupervisor(){ return CURRENT_USER?.role === 'supervisor'; }
@@ -423,6 +781,14 @@ function isViewer(){ return !CURRENT_USER || CURRENT_USER?.role === 'viewer'; }
 function canEdit(){ return isAdmin(); }
 function canSeeSettingsTab(){ return isAdmin() || isSupervisor(); }
 function canSeeBackupTab(){ return isAdmin(); }
+function canSeeAccessLogTab(){ return isAdmin(); }
+// Dues carries every resident's financial standing, so it's as sensitive as
+// Settings — admin can record payments, supervisor can view read-only,
+// guests/viewers never see this tab at all (not even a locked preview).
+function canSeeDuesTab(){ return isAdmin() || isSupervisor(); }
+function canEditDues(){ return isAdmin(); }
+// Locked = shown the 🔒 lock icon + hover preview only, full modal blocked.
+function isLocked(){ return isViewer(); }
 
 function refreshPermissionsUI(){
   const userLabel = document.getElementById('userLabel');
@@ -431,6 +797,11 @@ function refreshPermissionsUI(){
     userLabel.innerHTML = `${CURRENT_USER.username}<span class="role-pill">${CURRENT_USER.role}</span>`;
     authAction.textContent = 'Logout';
     authAction.setAttribute('onclick','doLogout()');
+  }else if(hasVerifiedGuest()){
+    const g = getGuestSession();
+    userLabel.innerHTML = `${g.mobile}<span class="role-pill">guest · verified</span>`;
+    authAction.textContent = 'Logout';
+    authAction.setAttribute('onclick','guestLogout()');
   }else{
     userLabel.innerHTML = `Guest<span class="role-pill">view only</span>`;
     authAction.textContent = 'Login';
@@ -438,8 +809,11 @@ function refreshPermissionsUI(){
   }
 
   // Tab visibility by role
+  document.querySelector('[data-tab="dues"]').classList.toggle('hidden', !canSeeDuesTab());
   document.querySelector('[data-tab="settings"]').classList.toggle('hidden', !canSeeSettingsTab());
+  document.querySelector('[data-tab="accesslog"]').classList.toggle('hidden', !canSeeAccessLogTab());
   document.querySelector('[data-tab="backup"]').classList.toggle('hidden', !canSeeBackupTab());
+  document.getElementById('duesReadonlyBanner').classList.toggle('hidden', !isSupervisor());
   // Settings tab: supervisor can open it, but everything inside is read-only
   document.getElementById('settingsReadonlyBanner').classList.toggle('hidden', !isSupervisor());
   document.getElementById('changePassCard').classList.toggle('hidden', !CURRENT_USER);
@@ -453,31 +827,255 @@ function refreshPermissionsUI(){
 
 async function bootApp(){
   document.getElementById('app').classList.remove('hidden');
-  refreshPermissionsUI();
 
   showToast('Loading data…');
   try{
+    await ensureSchema();
     await loadAllData();
   }catch(e){
     showToast('Could not load data: ' + e.message, true);
   }
+  refreshPermissionsUI();
   populateBlockFilter();
   renderStats();
   renderFlats();
   renderSettingsForm();
   renderUserList();
   switchTab('dashboard');
+
+  // If nobody has ever created an admin account, prompt for it right away
+  // so the portal isn't left without an administrator.
+  if(!hasAdminAccount() && !CURRENT_USER){
+    openAdminSetupModal();
+  }
 }
 
 /* ======================= TABS ======================= */
 function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
-  ['dashboard','settings','backup'].forEach(t=>{
+  ['dashboard','dues','settings','accesslog','backup'].forEach(t=>{
     document.getElementById('tab-'+t).classList.toggle('hidden', t!==name);
   });
+  if(name==='accesslog' && isAdmin()) loadAccessLog();
+  if(name==='dues' && canSeeDuesTab()) renderDues();
 }
 
-/* ======================= DASHBOARD ======================= */
+/* ======================= DUES / PAYMENTS ======================= */
+// Dues are tracked as "Month YYYY" (e.g. "July 2026") — a bare month name
+// isn't enough once the portal has been running for more than a year, since
+// "July" would otherwise mean the same thing in 2026 and 2027. Tracking
+// starts at July 2026; the calendar dropdown always offers at least ~18
+// months past today so admin can record dues ahead of time.
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DUES_CALENDAR_START = { year: 2026, month: 6 }; // July 2026 (0-indexed month)
+function monthYearOptions(){
+  const opts = [];
+  const d = new Date(DUES_CALENDAR_START.year, DUES_CALENDAR_START.month, 1);
+  const end = new Date();
+  end.setMonth(end.getMonth() + 18);
+  while(d <= end){
+    opts.push(`${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`);
+    d.setMonth(d.getMonth()+1);
+  }
+  return opts;
+}
+function parseMonthYear(s){
+  const m = /^([A-Za-z]+)\s+(\d{4})$/.exec(String(s||'').trim());
+  if(!m) return null;
+  const idx = MONTH_NAMES.indexOf(m[1]);
+  return idx===-1 ? null : new Date(Number(m[2]), idx, 1);
+}
+// Recognised "Month YYYY" values sort chronologically; anything that
+// doesn't parse (legacy data, typos) just sorts after them alphabetically.
+function sortMonths(months){
+  return [...months].sort((a,b)=>{
+    const da = parseMonthYear(a), db = parseMonthYear(b);
+    if(da && db) return da-db;
+    if(da) return -1;
+    if(db) return 1;
+    return String(a).localeCompare(String(b));
+  });
+}
+function latestDuesMonth(){
+  const months = [...new Set(DATA.dues.map(d=>d.month))];
+  if(!months.length) return monthYearOptions()[0] || null;
+  return sortMonths(months).slice(-1)[0];
+}
+function duesForFlatMonth(flatId, month){
+  return DATA.dues.find(d=>d.flatId===flatId && d.month===month) || null;
+}
+function occupantForFlat(flat){
+  const owner = DATA.owners.find(o=>o.flatId===flat.id);
+  const tenant = DATA.tenants.find(t=>t.flatId===flat.id);
+  return tenant || owner || null;
+}
+
+function populateDuesFilters(){
+  // The calendar range (from July 2026 onward) so admin can pick a month
+  // that has no dues recorded yet, plus any recorded month that happens to
+  // fall outside that window (e.g. legacy data), de-duplicated and sorted.
+  const recorded = [...new Set(DATA.dues.map(d=>d.month))];
+  const months = sortMonths([...new Set([...monthYearOptions(), ...recorded])]);
+  const monthSel = document.getElementById('duesMonthFilter');
+  const current = monthSel.value;
+  monthSel.innerHTML = months.map(m=>`<option value="${m}">${m}</option>`).join('') || '<option value="">No months recorded</option>';
+  monthSel.value = months.includes(current) ? current : (latestDuesMonth()||'');
+
+  const blocks = [...new Set(DATA.flats.map(f=>f.block))].sort();
+  const blockSel = document.getElementById('duesBlockFilter');
+  const curBlock = blockSel.value;
+  blockSel.innerHTML = '<option value="">All Blocks</option>' + blocks.map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+  blockSel.value = curBlock;
+}
+
+function renderDues(){
+  if(!canSeeDuesTab()) return;
+  populateDuesFilters();
+  const month = document.getElementById('duesMonthFilter').value;
+  const blockFilter = document.getElementById('duesBlockFilter').value;
+  const statusFilter = document.getElementById('duesStatusFilter').value;
+
+  let flats = DATA.flats.filter(f=> !blockFilter || f.block===blockFilter);
+  flats = [...flats].sort((a,b)=> a.block.localeCompare(b.block) || a.flatNumber.localeCompare(b.flatNumber));
+
+  const rows = flats.map(f=>{
+    const due = month ? duesForFlatMonth(f.id, month) : null;
+    const status = due ? due.bwssbStatus : 'not_recorded';
+    return { flat:f, due, status };
+  }).filter(r => !statusFilter || r.status===statusFilter);
+
+  // Stats for the selected month
+  const paidCount = rows.filter(r=>r.status==='paid').length;
+  const pendingCount = rows.filter(r=>r.status==='pending').length;
+  const notRecorded = rows.filter(r=>r.status==='not_recorded').length;
+  const pendingAmount = rows.filter(r=>r.status!=='paid').reduce((sum,r)=> sum + Number(r.due?.waterBill||0) + Number(r.due?.carCharge||0), 0);
+
+  document.getElementById('duesStatsGrid').innerHTML = [
+    ['📅','Month', month||'—','#eef2ff','#4f46e5'],
+    ['✅','Paid', paidCount,'#f0fdf4','#16a34a'],
+    ['⏳','Pending', pendingCount,'#fef2f2','#dc2626'],
+    ['❔','Not Recorded', notRecorded,'#f3f4f6','#4b5563'],
+    ['💸','Outstanding (Water+Car)', '₹'+pendingAmount.toLocaleString('en-IN'),'#fffbeb','#d97706'],
+  ].map(([icon,label,val,bg,fg])=>`
+    <div class="card stat-card">
+      <div class="stat-icon" style="background:${bg};color:${fg}">${icon}</div>
+      <div class="stat-value">${val}</div>
+      <div class="stat-label">${label}</div>
+    </div>`).join('');
+
+  const table = document.getElementById('duesTable');
+  if(!rows.length){
+    table.innerHTML = `<tr><td class="empty">No flats match this filter.</td></tr>`;
+    return;
+  }
+  table.innerHTML = `
+    <thead><tr>
+      <th>Flat</th><th>Occupant</th><th>Water Bill</th><th>Car Charge</th><th>BWSSB Status</th><th>BWSSB Amount</th>${canEditDues()?'<th></th>':''}
+    </tr></thead>
+    <tbody>
+    ${rows.map(r=>{
+      const occ = occupantForFlat(r.flat);
+      const badgeLabel = { paid:'Paid', pending:'Pending', not_recorded:'Not Recorded' }[r.status];
+      return `<tr>
+        <td><strong>${r.flat.block}-${r.flat.flatNumber}</strong></td>
+        <td>${occ?occ.name:'<span class="empty" style="padding:0;">Vacant</span>'}</td>
+        <td>${r.due?.waterBill!=null ? '₹'+Number(r.due.waterBill).toLocaleString('en-IN') : '—'}</td>
+        <td>${r.due?.carCharge!=null ? '₹'+Number(r.due.carCharge).toLocaleString('en-IN') : '—'}</td>
+        <td><span class="due-badge ${r.status}">${badgeLabel}</span></td>
+        <td>${r.due?.bwssbAmount!=null ? '₹'+Number(r.due.bwssbAmount).toLocaleString('en-IN') : '—'}</td>
+        ${canEditDues()?`<td><a onclick="openDueForm(${r.flat.id}, ${r.due?r.due.id:'null'})">${r.due?'Edit':'+ Add'}</a></td>`:''}
+      </tr>`;
+    }).join('')}
+    </tbody>`;
+}
+
+function openDueForm(flatId, dueId){
+  if(!canEditDues()) return;
+  const flat = DATA.flats.find(f=>f.id===flatId);
+  const existing = dueId ? DATA.dues.find(d=>d.id===dueId) : null;
+  const filterMonth = document.getElementById('duesMonthFilter').value;
+  const v = existing || { month: filterMonth || monthYearOptions()[0] };
+  document.getElementById('flatModalRoot').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h2 style="margin:0;">Dues — Flat ${flat.block}-${flat.flatNumber}</h2>
+        <button class="close-x" onclick="closeModal()">✕</button>
+      </div>
+      <form onsubmit="return submitDue(event, ${flatId}, ${dueId||'null'})">
+        <div class="field"><label>Month *</label>
+          <select name="month" required>
+            ${monthYearOptions().map(m=>`<option value="${m}" ${v.month===m?'selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+        <div class="row">
+          <div class="field"><label>Water Bill (₹)</label><input name="waterBill" type="number" step="1" value="${v.waterBill??''}"></div>
+          <div class="field"><label>Car Charge (₹)</label><input name="carCharge" type="number" step="1" value="${v.carCharge??''}"></div>
+        </div>
+        <div class="field"><label>BWSSB Status *</label>
+          <select name="bwssbStatus" required>
+            <option value="paid" ${v.bwssbStatus==='paid'?'selected':''}>Paid</option>
+            <option value="pending" ${v.bwssbStatus==='pending'?'selected':''}>Pending</option>
+            <option value="not_recorded" ${(!v.bwssbStatus||v.bwssbStatus==='not_recorded')?'selected':''}>Not Recorded</option>
+          </select>
+        </div>
+        <div class="field"><label>BWSSB Amount (₹, optional)</label><input name="bwssbAmount" type="number" step="1" value="${v.bwssbAmount??''}"></div>
+        <p id="dueFormError" class="error-text hidden"></p>
+        <div class="footer-actions">
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
+          ${dueId?`<button type="button" class="btn danger" onclick="deleteDue(${dueId}, ${flatId})">Delete</button>`:''}
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+async function submitDue(e, flatId, dueId){
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const month = fd.get('month').trim();
+  const waterBill = fd.get('waterBill')===''?null:Number(fd.get('waterBill'));
+  const carCharge = fd.get('carCharge')===''?null:Number(fd.get('carCharge'));
+  const bwssbStatus = fd.get('bwssbStatus');
+  const bwssbAmount = fd.get('bwssbAmount')===''?null:Number(fd.get('bwssbAmount'));
+  const errEl = document.getElementById('dueFormError');
+  if(!month){ errEl.textContent='Month is required.'; errEl.classList.remove('hidden'); return false; }
+  errEl.classList.add('hidden');
+  try{
+    if(dueId){
+      await tursoRun(
+        `UPDATE dues SET month=?, water_bill=?, car_charge=?, bwssb_status=?, bwssb_amount=? WHERE id=?`,
+        [month, waterBill, carCharge, bwssbStatus, bwssbAmount, dueId]
+      );
+      logAudit('UPDATE','due',dueId,`${month}`);
+    }else{
+      const r = await tursoRun(
+        `INSERT INTO dues (flat_id, month, water_bill, car_charge, bwssb_status, bwssb_amount) VALUES (?,?,?,?,?,?)`,
+        [flatId, month, waterBill, carCharge, bwssbStatus, bwssbAmount]
+      );
+      logAudit('CREATE','due',r.lastInsertRowid,`${month}`);
+    }
+    await loadAllData();
+    closeModal();
+    renderDues();
+    showToast('Due record saved.');
+  }catch(err){
+    errEl.textContent = err.message; errEl.classList.remove('hidden');
+  }
+  return false;
+}
+async function deleteDue(dueId, flatId){
+  if(!canEditDues()) return;
+  if(!confirm('Delete this due record?')) return;
+  await tursoRun('DELETE FROM dues WHERE id=?', [dueId]);
+  logAudit('DELETE','due',dueId,'');
+  await loadAllData();
+  closeModal();
+  renderDues();
+  showToast('Due record deleted.');
+}
+
+
 function renderStats(){
   const total = DATA.flats.length;
   const ownerOcc = DATA.flats.filter(f=>f.status==='owner').length;
@@ -497,6 +1095,15 @@ function renderStats(){
     ['🏍️','Total Bikes', bikes, '#faf5ff','#9333ea'],
     ['💰','Parking Revenue', '₹'+revenue.toLocaleString('en-IN'), '#fffbeb','#d97706'],
   ];
+  // Dues are financial/per-resident data, same sensitivity as the Dues tab
+  // itself — only surface this card on the dashboard for admin/supervisor.
+  if(canSeeDuesTab()){
+    const month = latestDuesMonth();
+    if(month){
+      const pending = DATA.dues.filter(d=>d.month===month && d.bwssbStatus==='pending').length;
+      cards.push(['⏳', `BWSSB Pending (${month})`, pending, '#fef2f2', '#dc2626']);
+    }
+  }
   document.getElementById('statsGrid').innerHTML = cards.map(([icon,label,val,bg,fg])=>`
     <div class="card stat-card">
       <div class="stat-icon" style="background:${bg};color:${fg}">${icon}</div>
@@ -511,7 +1118,131 @@ function populateBlockFilter(){
   sel.innerHTML = '<option value="">All Blocks</option>' + blocks.map(b=>`<option value="${b}">Block ${b}</option>`).join('');
 }
 
+function initials(name){
+  return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+/* ---- Access tracking ----
+   Records, in the existing audit_log table, every time ANY account type
+   (admin, supervisor, viewer) — and anonymous signed-out guests — accesses
+   a flat's member details. Viewer/guest-role accounts and anonymous guests
+   are only ever shown the hover preview (locked cards), so that's logged
+   on mouseenter. Admin/supervisor open the full flat modal directly, so
+   that's logged when the modal opens. Throttled per flat+identity so
+   repeated hovers/re-opens don't spam the log.
+
+   The exact timestamp, username, and role are embedded directly into the
+   details field at write time (rather than relying on DB-side columns we
+   may not control), using a "::" delimited format:
+   flatLabel::username::role::isoTime. This guarantees every entry always
+   has an accurate timestamp and identity regardless of the audit_log schema.
+*/
+const VIEW_LOG_THROTTLE = {};
+function logFlatView(flatId){
+  const flat = DATA.flats.find(f=>f.id===flatId);
+  if(!flat) return;
+  // Verified guests are logged under their mobile number rather than the
+  // generic "Guest" label, so their directory activity is fully traceable.
+  const guestSession = !CURRENT_USER ? getGuestSession() : null;
+  const username = CURRENT_USER ? CURRENT_USER.username : (guestSession?.mobile || 'Guest');
+  const role = CURRENT_USER ? CURRENT_USER.role : 'guest';
+  const throttleKey = `${flatId}_${username}`;
+  const now = Date.now();
+  const last = VIEW_LOG_THROTTLE[throttleKey];
+  if(last && (now-last) < 8000) return; // avoid re-logging the same view repeatedly
+  VIEW_LOG_THROTTLE[throttleKey] = now;
+  const flatLabel = `${flat.block}-${flat.flatNumber}`;
+  const details = `${flatLabel}::${username}::${role}::${new Date().toISOString()}`;
+  logAudit('VIEW','flat_view', flatId, details);
+}
+
+function formatAccessLogTime(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return iso || '—';
+  return d.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// Auto-clear: any access-log entry older than 24 hours is deleted, based on
+// the timestamp embedded in details at write time (accurate regardless of
+// the audit_log table's own schema). Runs whenever the log is loaded, plus
+// a periodic background sweep, so the log never holds more than a day of
+// history without needing a manual "Clear Log" click.
+const ACCESS_LOG_MAX_AGE_MS = 24*60*60*1000;
+async function pruneOldAccessLogs(){
+  try{
+    const r = await tursoRun(`SELECT * FROM audit_log WHERE action='VIEW' AND entity='flat_view'`);
+    const cutoff = Date.now() - ACCESS_LOG_MAX_AGE_MS;
+    const staleIds = r.rows.filter(row=>{
+      const parts = (row.details||'').split('::');
+      const t = new Date(parts[3]).getTime();
+      return !isNaN(t) && t < cutoff && row.id!=null;
+    }).map(row=>row.id);
+    if(staleIds.length){
+      await tursoBatch(staleIds.map(id=>({ sql:'DELETE FROM audit_log WHERE id=?', args:[id] })));
+    }
+    return staleIds.length;
+  }catch(e){
+    console.warn('Access log auto-clear failed', e);
+    return 0;
+  }
+}
+
+async function loadAccessLog(){
+  if(!isAdmin()) return;
+  const el = document.getElementById('accessLogBody');
+  el.innerHTML = '<p class="empty">Loading…</p>';
+  try{
+    await pruneOldAccessLogs(); // drop anything older than 24h before displaying
+    const r = await tursoRun(
+      `SELECT * FROM audit_log WHERE action='VIEW' AND entity='flat_view' ORDER BY id DESC LIMIT 300`
+    );
+    if(!r.rows.length){ el.innerHTML = '<p class="empty">No flat-detail views in the last 24 hours.</p>'; return; }
+    el.innerHTML = `<div class="access-log-list">${r.rows.map(row=>{
+      const parts = (row.details||'').split('::');
+      const flatLabel = parts[0] || '—';
+      const username = parts[1] || row.username || '—';
+      const role = parts[2] || '';
+      const isoTime = parts[3];
+      return `
+      <div class="access-log-row">
+        <div><span class="access-log-flat">Flat ${flatLabel}</span> — <strong>${username}</strong>${role?`<span class="role-pill">${role}</span>`:''}</div>
+        <div class="access-log-time">🕒 ${formatAccessLogTime(isoTime)}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }catch(e){
+    el.innerHTML = `<p class="error-text">${e.message}</p>`;
+  }
+}
+
+async function clearAccessLog(){
+  if(!isAdmin()) return;
+  if(!confirm('Clear the entire Access Log? This cannot be undone.')) return;
+  try{
+    await tursoRun(`DELETE FROM audit_log WHERE action='VIEW' AND entity='flat_view'`);
+    await loadAccessLog();
+    showToast('Access log cleared.');
+  }catch(e){
+    showToast('Could not clear log: ' + e.message, true);
+  }
+}
+
 function renderFlats(){
+  const grid = document.getElementById('flatGrid');
+
+  // Anonymous, unverified guests never see the directory (not even the
+  // locked hover-preview cards) until they pass mobile + OTP verification.
+  if(needsGuestVerification()){
+    grid.classList.add('full-width');
+    grid.innerHTML = `
+      <div class="guest-gate">
+        <div class="gg-icon">🔒</div>
+        <h3 style="margin:0 0 6px;">Verify to View Directory</h3>
+        <p>For residents' privacy, guests must verify a mobile number before browsing flat details. It only takes a minute, and your activity will be visible to the admin.</p>
+        <button class="btn" onclick="openGuestVerifyModal()">Verify with Mobile OTP</button>
+      </div>`;
+    return;
+  }
+
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
   const status = document.getElementById('statusFilter').value;
   const block = document.getElementById('blockFilter').value;
@@ -525,8 +1256,8 @@ function renderFlats(){
       const vehicles = DATA.vehicles.filter(v=>v.flatId===f.id);
       const hay = [
         f.block, f.flatNumber,
-        owner?.name, owner?.mobile,
-        tenant?.name, tenant?.mobile,
+        owner?.name, owner?.mobile1, owner?.mobile2,
+        tenant?.name, tenant?.mobile1, tenant?.mobile2,
         ...vehicles.map(v=>v.number)
       ].filter(Boolean).join(' ').toLowerCase();
       if(!hay.includes(search)) return false;
@@ -536,8 +1267,10 @@ function renderFlats(){
 
   flats.sort((a,b)=> a.block.localeCompare(b.block) || a.flatNumber.localeCompare(b.flatNumber));
 
-  const grid = document.getElementById('flatGrid');
-  if(flats.length===0){ grid.innerHTML = '<p class="empty">No flats match your search.</p>'; return; }
+  if(flats.length===0){ grid.classList.add('full-width'); grid.innerHTML = '<p class="empty">No flats match your search.</p>'; return; }
+  grid.classList.remove('full-width');
+
+  const locked = isLocked();
 
   grid.innerHTML = flats.map(f=>{
     const owner = f.status==='owner' ? DATA.owners.find(o=>o.flatId===f.id) : null;
@@ -545,22 +1278,57 @@ function renderFlats(){
     const occupant = owner || tenant;
     const cars = DATA.vehicles.filter(v=>v.flatId===f.id && v.type==='4wheeler' && v.status==='active').length;
     const bikes = DATA.vehicles.filter(v=>v.flatId===f.id && v.type==='2wheeler' && v.status==='active').length;
-    const parkingIcons = `${cars?`🚗×${cars} `:''}${bikes?`🏍️×${bikes}`:''}`;
+    const parkingIcons = `${cars?`<span>🚗×${cars}</span>`:''}${bikes?`<span>🏍️×${bikes}</span>`:''}`;
+    const clickAttr = locked ? `onclick="lockedClick(event)"` : `onclick="openFlatModal(${f.id})"`;
+
+    // Hover preview (photo, name, mobile, click-to-call) is only rendered
+    // for locked cards — guests and viewers. Admin/supervisor click straight
+    // through to the full record, so no preview is needed for them.
+    let hoverInfo = '';
+    if(locked){
+      const avatar = occupant?.photoUrl
+        ? `<img src="${occupant.photoUrl}" class="havatar">`
+        : `<div class="havatar initials">${occupant ? initials(occupant.name) : '—'}</div>`;
+      const hoverMobileRows = occupant ? `
+        <table class="hmobile-table">
+          <tr><td class="mlabel">M1</td><td>${occupant.mobile1||''}</td></tr>
+          ${occupant.mobile2?`<tr><td class="mlabel">M2</td><td>${occupant.mobile2}</td></tr>`:''}
+        </table>` : '';
+      const hoverCallRow = occupant ? `
+        <div class="hcall-row">
+          <a class="hcall" href="tel:${occupant.mobile1}" onclick="event.stopPropagation()">📞 M1</a>
+          ${occupant.mobile2?`<a class="hcall" href="tel:${occupant.mobile2}" onclick="event.stopPropagation()">📞 M2</a>`:''}
+        </div>` : '';
+      hoverInfo = `
+      <div class="flat-hover-info">
+        ${avatar}
+        <div class="hname">${occupant ? occupant.name : 'Vacant'}</div>
+        ${hoverMobileRows}
+        ${hoverCallRow}
+      </div>`;
+    }
+
+    const hoverLogAttr = locked ? `onmouseenter="logFlatView(${f.id})"` : '';
     return `
-    <div class="card flat-card ${f.status}" onclick="openFlatModal(${f.id})">
+    <div class="card flat-card ${f.status} ${locked?'locked':''}" ${clickAttr} ${hoverLogAttr}>
+      ${locked?'<div class="lock-icon">🔒</div>':''}
       <div class="flatnum">${f.block}-${f.flatNumber}</div>
       <span class="badge">${f.status}</span>
       ${parkingIcons?`<div class="parking-icons">${parkingIcons}</div>`:''}
-      <div class="flat-hover-info">
-        <div class="hname">${occupant ? occupant.name : 'Vacant'}</div>
-        ${occupant ? `<div class="hmobile">📱 ${occupant.mobile}</div>` : ''}
-      </div>
+      ${hoverInfo}
     </div>`;
   }).join('');
 }
 
+function lockedClick(e){
+  e.stopPropagation();
+  showToast('Login required to view full flat details.');
+}
+
 /* ======================= FLAT MODAL ======================= */
 function openFlatModal(flatId){
+  if(isLocked()){ showToast('Login required to view full flat details.'); return; }
+  logFlatView(flatId); // admin/supervisor see full details directly, so log access here
   const flat = DATA.flats.find(f=>f.id===flatId);
   const owner = DATA.owners.find(o=>o.flatId===flatId);
   const tenant = DATA.tenants.find(t=>t.flatId===flatId);
@@ -612,13 +1380,23 @@ function openFlatModal(flatId){
 }
 function closeModal(){ document.getElementById('flatModalRoot').innerHTML=''; }
 
+// Renders mobile number(s) as a small two-row table (Mobile 1 / Mobile 2)
+// instead of a single slash-separated line. Mobile 2 row is only shown when present.
+function renderMobileTable(mobile1, mobile2){
+  if(!mobile1 && !mobile2) return '';
+  let rows = `<tr><td class="mlabel">📱 Mobile 1</td><td><a href="tel:${mobile1}">${mobile1}</a></td></tr>`;
+  if(mobile2){
+    rows += `<tr><td class="mlabel">📱 Mobile 2</td><td><a href="tel:${mobile2}">${mobile2}</a></td></tr>`;
+  }
+  return `<table class="mobile-table">${rows}</table>`;
+}
 function renderOwnerInfo(o){
   return `
   <div style="display:flex;gap:12px;align-items:flex-start;">
     ${o.photoUrl?`<img src="${o.photoUrl}" class="photo-preview">`:''}
     <div>
       <div class="info-line"><strong>${o.name}</strong></div>
-      <div class="info-line">📱 ${o.mobile}</div>
+      ${renderMobileTable(o.mobile1, o.mobile2)}
       ${o.email?`<div class="info-line">✉️ ${o.email}</div>`:''}
       ${o.occupation?`<div class="info-line">💼 ${o.occupation}</div>`:''}
       ${o.bloodGroup?`<div class="info-line">🩸 ${o.bloodGroup}</div>`:''}
@@ -634,7 +1412,7 @@ function renderTenantInfo(t){
     ${t.photoUrl?`<img src="${t.photoUrl}" class="photo-preview">`:''}
     <div>
       <div class="info-line"><strong>${t.name}</strong></div>
-      <div class="info-line">📱 ${t.mobile}</div>
+      ${renderMobileTable(t.mobile1, t.mobile2)}
       ${t.email?`<div class="info-line">✉️ ${t.email}</div>`:''}
       ${t.company?`<div class="info-line">🏢 ${t.company}</div>`:''}
       ${t.rentalStartDate?`<div class="info-line">📅 ${t.rentalStartDate} → ${t.rentalEndDate||'ongoing'}</div>`:''}
@@ -661,14 +1439,17 @@ function showOwnerForm(flatId, ownerId){
     <div class="field"><label>Ownership / Flat Position Document (PDF or image)</label><input type="file" accept="image/*,.pdf" id="ownerProofInput"></div>
     <div class="row">
       <div class="field"><label>Full Name *</label><input name="name" required value="${v.name||''}"></div>
-      <div class="field"><label>Mobile (10 digits) *</label><input name="mobile" required pattern="\\d{10}" value="${v.mobile||''}"></div>
+      <div class="field"><label>Mobile 1 (10 digits) *</label><input name="mobile1" required pattern="\\d{10}" value="${v.mobile1||''}"></div>
     </div>
     <div class="row">
+      <div class="field"><label>Mobile 2 (10 digits, optional)</label><input name="mobile2" pattern="\\d{10}" value="${v.mobile2||''}"></div>
       <div class="field"><label>WhatsApp</label><input name="whatsapp" pattern="\\d{10}" value="${v.whatsapp||''}"></div>
-      <div class="field"><label>Email</label><input name="email" type="email" value="${v.email||''}"></div>
     </div>
     <div class="row">
+      <div class="field"><label>Email</label><input name="email" type="email" value="${v.email||''}"></div>
       <div class="field"><label>Occupation</label><input name="occupation" value="${v.occupation||''}"></div>
+    </div>
+    <div class="row">
       <div class="field"><label>Blood Group</label><input name="bloodGroup" value="${v.bloodGroup||''}"></div>
     </div>
     <div class="row">
@@ -686,10 +1467,12 @@ function showOwnerForm(flatId, ownerId){
 async function submitOwner(e, flatId, ownerId){
   e.preventDefault();
   const fd = new FormData(e.target);
-  const mobile = fd.get('mobile');
+  const mobile1 = fd.get('mobile1');
+  const mobile2 = fd.get('mobile2');
   const whatsapp = fd.get('whatsapp');
   const errEl = document.getElementById('ownerFormError');
-  if(!/^\d{10}$/.test(mobile)){ errEl.textContent='Mobile must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  if(!/^\d{10}$/.test(mobile1)){ errEl.textContent='Mobile 1 must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  if(mobile2 && !/^\d{10}$/.test(mobile2)){ errEl.textContent='Mobile 2 must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
   if(whatsapp && !/^\d{10}$/.test(whatsapp)){ errEl.textContent='WhatsApp must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
   errEl.classList.add('hidden');
 
@@ -705,7 +1488,7 @@ async function submitOwner(e, flatId, ownerId){
     if(proofFile) proofUrl = await uploadToCloudinary(proofFile);
 
     const fields = {
-      name: fd.get('name'), mobile, whatsapp, email: fd.get('email'),
+      name: fd.get('name'), mobile1, mobile2: mobile2||null, whatsapp, email: fd.get('email'),
       occupation: fd.get('occupation'), blood_group: fd.get('bloodGroup'),
       emergency_contact: fd.get('emergencyContact'), emergency_number: fd.get('emergencyNumber'),
       move_in_date: fd.get('moveInDate'), photo_url: photoUrl, proof_url: proofUrl
@@ -713,14 +1496,14 @@ async function submitOwner(e, flatId, ownerId){
 
     if(ownerId){
       await tursoRun(
-        `UPDATE owners SET name=?, mobile=?, whatsapp=?, email=?, occupation=?, blood_group=?, emergency_contact=?, emergency_number=?, move_in_date=?, photo_url=?, proof_url=? WHERE id=?`,
-        [fields.name, fields.mobile, fields.whatsapp, fields.email, fields.occupation, fields.blood_group, fields.emergency_contact, fields.emergency_number, fields.move_in_date, fields.photo_url, fields.proof_url, ownerId]
+        `UPDATE owners SET name=?, mobile1=?, mobile2=?, whatsapp=?, email=?, occupation=?, blood_group=?, emergency_contact=?, emergency_number=?, move_in_date=?, photo_url=?, proof_url=? WHERE id=?`,
+        [fields.name, fields.mobile1, fields.mobile2, fields.whatsapp, fields.email, fields.occupation, fields.blood_group, fields.emergency_contact, fields.emergency_number, fields.move_in_date, fields.photo_url, fields.proof_url, ownerId]
       );
       logAudit('UPDATE','owner',ownerId,fields.name);
     }else{
       const r = await tursoRun(
-        `INSERT INTO owners (flat_id, name, mobile, whatsapp, email, occupation, blood_group, emergency_contact, emergency_number, move_in_date, photo_url, proof_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-        [flatId, fields.name, fields.mobile, fields.whatsapp, fields.email, fields.occupation, fields.blood_group, fields.emergency_contact, fields.emergency_number, fields.move_in_date, fields.photo_url, fields.proof_url]
+        `INSERT INTO owners (flat_id, name, mobile1, mobile2, whatsapp, email, occupation, blood_group, emergency_contact, emergency_number, move_in_date, photo_url, proof_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [flatId, fields.name, fields.mobile1, fields.mobile2, fields.whatsapp, fields.email, fields.occupation, fields.blood_group, fields.emergency_contact, fields.emergency_number, fields.move_in_date, fields.photo_url, fields.proof_url]
       );
       await tursoRun(`UPDATE flats SET status='owner' WHERE id=?`, [flatId]);
       logAudit('CREATE','owner',r.lastInsertRowid,fields.name);
@@ -757,12 +1540,13 @@ function showTenantForm(flatId, tenantId){
     <div class="field"><label>Rental Agreement (PDF or image)</label><input type="file" accept="image/*,.pdf" id="tenantAgreementInput"></div>
     <div class="row">
       <div class="field"><label>Full Name *</label><input name="name" required value="${v.name||''}"></div>
-      <div class="field"><label>Mobile (10 digits) *</label><input name="mobile" required pattern="\\d{10}" value="${v.mobile||''}"></div>
+      <div class="field"><label>Mobile 1 (10 digits) *</label><input name="mobile1" required pattern="\\d{10}" value="${v.mobile1||''}"></div>
     </div>
     <div class="row">
+      <div class="field"><label>Mobile 2 (10 digits, optional)</label><input name="mobile2" pattern="\\d{10}" value="${v.mobile2||''}"></div>
       <div class="field"><label>WhatsApp</label><input name="whatsapp" pattern="\\d{10}" value="${v.whatsapp||''}"></div>
-      <div class="field"><label>Email</label><input name="email" type="email" value="${v.email||''}"></div>
     </div>
+    <div class="field"><label>Email</label><input name="email" type="email" value="${v.email||''}"></div>
     <div class="field"><label>Company</label><input name="company" value="${v.company||''}"></div>
     <div class="row">
       <div class="field"><label>Rental Start</label><input name="rentalStartDate" type="date" value="${v.rentalStartDate||''}"></div>
@@ -779,10 +1563,12 @@ function showTenantForm(flatId, tenantId){
 async function submitTenant(e, flatId, tenantId){
   e.preventDefault();
   const fd = new FormData(e.target);
-  const mobile = fd.get('mobile');
+  const mobile1 = fd.get('mobile1');
+  const mobile2 = fd.get('mobile2');
   const whatsapp = fd.get('whatsapp');
   const errEl = document.getElementById('tenantFormError');
-  if(!/^\d{10}$/.test(mobile)){ errEl.textContent='Mobile must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  if(!/^\d{10}$/.test(mobile1)){ errEl.textContent='Mobile 1 must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
+  if(mobile2 && !/^\d{10}$/.test(mobile2)){ errEl.textContent='Mobile 2 must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
   if(whatsapp && !/^\d{10}$/.test(whatsapp)){ errEl.textContent='WhatsApp must be exactly 10 digits.'; errEl.classList.remove('hidden'); return false; }
   errEl.classList.add('hidden');
 
@@ -798,21 +1584,21 @@ async function submitTenant(e, flatId, tenantId){
     if(agreementFile) agreementUrl = await uploadToCloudinary(agreementFile);
 
     const fields = {
-      name: fd.get('name'), mobile, whatsapp, email: fd.get('email'), company: fd.get('company'),
+      name: fd.get('name'), mobile1, mobile2: mobile2||null, whatsapp, email: fd.get('email'), company: fd.get('company'),
       rental_start_date: fd.get('rentalStartDate'), rental_end_date: fd.get('rentalEndDate'),
       police_verification: fd.get('policeVerification'), photo_url: photoUrl, agreement_url: agreementUrl
     };
 
     if(tenantId){
       await tursoRun(
-        `UPDATE tenants SET name=?, mobile=?, whatsapp=?, email=?, company=?, rental_start_date=?, rental_end_date=?, police_verification=?, photo_url=?, agreement_url=? WHERE id=?`,
-        [fields.name, fields.mobile, fields.whatsapp, fields.email, fields.company, fields.rental_start_date, fields.rental_end_date, fields.police_verification, fields.photo_url, fields.agreement_url, tenantId]
+        `UPDATE tenants SET name=?, mobile1=?, mobile2=?, whatsapp=?, email=?, company=?, rental_start_date=?, rental_end_date=?, police_verification=?, photo_url=?, agreement_url=? WHERE id=?`,
+        [fields.name, fields.mobile1, fields.mobile2, fields.whatsapp, fields.email, fields.company, fields.rental_start_date, fields.rental_end_date, fields.police_verification, fields.photo_url, fields.agreement_url, tenantId]
       );
       logAudit('UPDATE','tenant',tenantId,fields.name);
     }else{
       const r = await tursoRun(
-        `INSERT INTO tenants (flat_id, name, mobile, whatsapp, email, company, rental_start_date, rental_end_date, police_verification, photo_url, agreement_url) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-        [flatId, fields.name, fields.mobile, fields.whatsapp, fields.email, fields.company, fields.rental_start_date, fields.rental_end_date, fields.police_verification, fields.photo_url, fields.agreement_url]
+        `INSERT INTO tenants (flat_id, name, mobile1, mobile2, whatsapp, email, company, rental_start_date, rental_end_date, police_verification, photo_url, agreement_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [flatId, fields.name, fields.mobile1, fields.mobile2, fields.whatsapp, fields.email, fields.company, fields.rental_start_date, fields.rental_end_date, fields.police_verification, fields.photo_url, fields.agreement_url]
       );
       await tursoRun(`UPDATE flats SET status='tenant' WHERE id=?`, [flatId]);
       logAudit('CREATE','tenant',r.lastInsertRowid,fields.name);
@@ -1003,6 +1789,108 @@ async function resetAllData(){
   showToast('All records erased.');
 }
 
+/* ---- Bulk import ----
+   Creates new flats (plus their owner/tenant, when given) from a pasted
+   JSON array — e.g. parsed from an apartment's account-details spreadsheet.
+   Mobile numbers are fed straight into the mobile1/mobile2 columns, kept
+   separate for the owner vs. the tenant of each flat. Any record whose
+   block + flat number already exists in the portal is skipped, so the
+   same import can be re-run safely (e.g. a later month's sheet) without
+   creating duplicates — existing records stay untouched and remain fully
+   editable through the normal Add/Edit forms afterward.
+*/
+function loadPresetDuesData(){
+  if(!isAdmin()) return;
+  document.getElementById('bulkImportDuesInput').value = JSON.stringify(NETHRAVATHI_DUES_DATA, null, 2);
+  showToast('Loaded 155 monthly due records — review, then click Run Import.');
+}
+async function runBulkImportDues(){
+  if(!isAdmin()) return;
+  const ta = document.getElementById('bulkImportDuesInput');
+  const statusEl = document.getElementById('bulkImportDuesStatus');
+  statusEl.classList.remove('hidden');
+  let records;
+  try{ records = JSON.parse(ta.value); }catch(e){ statusEl.textContent = 'Invalid JSON: ' + e.message; return; }
+  if(!Array.isArray(records)){ statusEl.textContent = 'Expected a JSON array of records.'; return; }
+
+  const flatKey = new Map(DATA.flats.map(f=>[`${f.block}::${f.flatNumber}`, f]));
+  const valid = records.filter(r => r.block && r.flatNumber && r.month && flatKey.has(`${r.block}::${r.flatNumber}`));
+  const skipped = records.length - valid.length;
+  if(!valid.length){ statusEl.textContent = `Nothing to import — no records matched an existing flat. Import flats first.`; return; }
+
+  statusEl.textContent = `Importing ${valid.length} due record(s)…`;
+  const stmts = valid.map(r => ({
+    sql: 'INSERT INTO dues (flat_id, month, water_bill, car_charge, bwssb_status, bwssb_amount) SELECT id, ?, ?, ?, ?, ? FROM flats WHERE block=? AND flat_number=?',
+    args: [r.month, r.waterBill??null, r.carCharge??null, r.bwssbStatus||'not_recorded', r.bwssbAmount??null, r.block, r.flatNumber]
+  }));
+
+  try{
+    const CHUNK = 60;
+    for(let i=0;i<stmts.length;i+=CHUNK){
+      await tursoBatch(stmts.slice(i,i+CHUNK));
+    }
+    logAudit('BULK_IMPORT','dues', null, `${valid.length} due records`);
+    await loadAllData();
+    renderStats();
+    if(!document.getElementById('tab-dues').classList.contains('hidden')) renderDues();
+    statusEl.textContent = `✅ Imported ${valid.length} due record(s). Skipped ${skipped} record(s) with no matching flat.`;
+    showToast('Dues import complete.');
+  }catch(e){
+    statusEl.textContent = '❌ Import failed: ' + e.message;
+  }
+}
+function loadPresetImportData(){
+  if(!isAdmin()) return;
+  document.getElementById('bulkImportInput').value = JSON.stringify(NETHRAVATHI_IMPORT_DATA, null, 2);
+  showToast('Loaded 120 flat records from the sheet — review, then click Run Import.');
+}
+async function runBulkImport(){
+  if(!isAdmin()) return;
+  const ta = document.getElementById('bulkImportInput');
+  const statusEl = document.getElementById('bulkImportStatus');
+  statusEl.classList.remove('hidden');
+  let records;
+  try{ records = JSON.parse(ta.value); }catch(e){ statusEl.textContent = 'Invalid JSON: ' + e.message; return; }
+  if(!Array.isArray(records)){ statusEl.textContent = 'Expected a JSON array of records.'; return; }
+
+  const existing = new Set(DATA.flats.map(f=>`${f.block}::${f.flatNumber}`));
+  const toCreate = records.filter(r => r.block && r.flatNumber && !existing.has(`${r.block}::${r.flatNumber}`));
+  const skipped = records.length - toCreate.length;
+  if(!toCreate.length){ statusEl.textContent = `Nothing to import — all ${skipped} record(s) already exist as flats.`; return; }
+
+  statusEl.textContent = `Importing ${toCreate.length} flat(s)…`;
+  const stmts = [];
+  let ownerCount = 0, tenantCount = 0;
+  toCreate.forEach(r=>{
+    const status = r.tenant?.name ? 'tenant' : (r.owner?.name ? 'owner' : 'vacant');
+    stmts.push({ sql:'INSERT INTO flats (block, flat_number, status, parking_available) VALUES (?,?,?,1)', args:[r.block, r.flatNumber, status] });
+    if(r.owner?.name){
+      stmts.push({ sql:'INSERT INTO owners (flat_id, name, mobile1, mobile2) SELECT id, ?, ?, ? FROM flats WHERE block=? AND flat_number=?',
+        args:[r.owner.name, r.owner.mobile1||null, r.owner.mobile2||null, r.block, r.flatNumber] });
+      ownerCount++;
+    }
+    if(r.tenant?.name){
+      stmts.push({ sql:'INSERT INTO tenants (flat_id, name, mobile1, mobile2) SELECT id, ?, ?, ? FROM flats WHERE block=? AND flat_number=?',
+        args:[r.tenant.name, r.tenant.mobile1||null, r.tenant.mobile2||null, r.block, r.flatNumber] });
+      tenantCount++;
+    }
+  });
+
+  try{
+    const CHUNK = 60; // keep each Turso round trip a reasonable size
+    for(let i=0;i<stmts.length;i+=CHUNK){
+      await tursoBatch(stmts.slice(i,i+CHUNK));
+    }
+    logAudit('BULK_IMPORT','flats', null, `${toCreate.length} flats, ${ownerCount} owners, ${tenantCount} tenants`);
+    await loadAllData();
+    renderStats(); renderFlats(); populateBlockFilter();
+    statusEl.textContent = `✅ Imported ${toCreate.length} flat(s), ${ownerCount} owner(s), ${tenantCount} tenant(s). Skipped ${skipped} already-existing flat(s).`;
+    showToast('Bulk import complete.');
+  }catch(e){
+    statusEl.textContent = '❌ Import failed: ' + e.message;
+  }
+}
+
 /* ======================= MISC ======================= */
 function showToast(msg, isError){
   const t = document.getElementById('toast');
@@ -1026,10 +1914,18 @@ function toggleDark(){
     try{ CURRENT_USER = JSON.parse(session); }catch(e){ CURRENT_USER = null; }
   }
   await bootApp(); // Dashboard is public by default; CURRENT_USER may be null (guest/view-only)
+
+  // Background sweep so the Access Log never holds more than 24h of history
+  // even if an admin never opens that tab. Only runs while an admin session
+  // is active, and re-renders the tab live if it happens to be open.
+  setInterval(async ()=>{
+    if(!isAdmin()) return;
+    const removed = await pruneOldAccessLogs();
+    if(removed && !document.getElementById('tab-accesslog').classList.contains('hidden')){
+      loadAccessLog();
+    }
+  }, 30*60*1000); // every 30 minutes
 })();
-</script>
-</body>
-</html>
 </script>
 </body>
 </html>
