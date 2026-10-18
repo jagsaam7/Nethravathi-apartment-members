@@ -1927,5 +1927,55 @@ function toggleDark(){
   }, 30*60*1000); // every 30 minutes
 })();
 </script>
+
+  <script>
+(function guard(API,PORTAL){
+  /* License Guard — paste before </body> of the portal. Talks to your License API; no database token in this script. */
+  const GRACE=864e5,KEY='lm_key_'+PORTAL,OKT='lm_ok_'+PORTAL;
+  let dev=localStorage.getItem('lm_dev');
+  if(!dev){dev=crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();localStorage.setItem('lm_dev',dev);}
+  const norm=k=>{const d=String(k||'').replace(/\D/g,'');return d.length===16?d.match(/\d{4}/g).join('-'):null};
+  async function check(k){
+    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,portal:PORTAL,device:dev})});
+    if(r.status>=500)throw new Error('server');
+    return r.json();
+  }
+  function lock(msg){
+    let o=document.getElementById('lm_ov');
+    if(!o){
+      o=document.createElement('div');o.id='lm_ov';
+      o.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#0f172a;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;padding:16px';
+      o.innerHTML='<div style="background:#fff;border-radius:16px;padding:28px;max-width:380px;width:100%;text-align:center"><div style="font-size:36px">🔐</div><h2 style="margin:6px 0">License Required</h2><p id="lm_m" style="color:#64748b;margin:0 0 16px;font-size:14px"></p><input id="lm_in" placeholder="0000-0000-0000-0000" maxlength="19" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:12px;font-size:18px;text-align:center;letter-spacing:2px;border:1px solid #cbd5e1;border-radius:10px"><button id="lm_bt" style="margin-top:12px;width:100%;padding:12px;border:0;border-radius:10px;background:#4f46e5;color:#fff;font-size:15px;cursor:pointer">Activate</button></div>';
+      document.body.appendChild(o);
+      document.documentElement.style.overflow='hidden';
+      document.getElementById('lm_bt').onclick=()=>{const k=norm(document.getElementById('lm_in').value);if(!k)return lock('Key must be 16 digits.');run(k)};
+    }
+    document.getElementById('lm_m').textContent=msg||'Enter your 16-digit license key to continue.';
+  }
+  function unlock(){const o=document.getElementById('lm_ov');if(o)o.remove();document.documentElement.style.overflow='';}
+  function banner(r){
+    if(r.type!=='trial'||!r.expires_at)return;
+    let b=document.getElementById('lm_bn');
+    if(!b){b=document.createElement('div');b.id='lm_bn';b.style.cssText='position:fixed;bottom:10px;right:10px;z-index:99999;background:#f59e0b;color:#000;padding:6px 12px;border-radius:20px;font:12px system-ui';document.body.appendChild(b);}
+    b.textContent='Trial: '+r.days_left+' day(s) left';
+  }
+  async function run(k){
+    try{
+      const r=await check(k);
+      if(r.ok){localStorage.setItem(KEY,k);localStorage.setItem(OKT,String(Date.now()));unlock();banner(r);}
+      else{localStorage.removeItem(KEY);lock(r.m);}
+    }catch(e){
+      if(localStorage.getItem(KEY)&&Date.now()-Number(localStorage.getItem(OKT)||0)<GRACE)return unlock();
+      lock('Cannot verify license. Check your internet connection.');
+    }
+  }
+  function start(){
+    const k=localStorage.getItem(KEY);
+    if(k){lock('Verifying license…');run(k);}else lock();
+    setInterval(()=>{const k=localStorage.getItem(KEY);if(k)run(k)},600000);
+  }
+  if(document.body)start();else document.addEventListener('DOMContentLoaded',start);
+})("https://nethravathi-apartment-members.vercel.app/api/license","BILL");
+</script>
 </body>
 </html>
