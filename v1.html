@@ -28,6 +28,11 @@ header.board{padding:30px 24px 18px;text-align:center;border-bottom:1px solid va
 .board-frame h1{font-weight:600;font-size:1.75rem;letter-spacing:0.04em;margin:0;color:var(--brass-soft);}
 .board-frame p{margin:5px 0 0;color:var(--cream-dim);font-size:0.82rem;letter-spacing:0.03em;}
 
+/* ---- IST clock (top right) ---- */
+.clock-bar{max-width:1180px;margin:10px auto 0;padding:0 24px;display:flex;justify-content:flex-end;}
+.ist-clock{display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--cream);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 12px;font-variant-numeric:tabular-nums;}
+.ist-clock b{color:var(--brass-soft);font-weight:600;}
+.ist-clock .tz{font-size:0.66rem;letter-spacing:0.06em;color:var(--brass);border:1px solid rgba(201,162,39,0.4);border-radius:8px;padding:1px 6px;}
 /* ---- Topbar / session ---- */
 .session-row{max-width:1180px;margin:14px auto 0;padding:0 24px;display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
 .role-badge{font-size:0.68rem;padding:4px 10px;border-radius:10px;font-weight:600;letter-spacing:0.05em;background:rgba(201,162,39,0.15);color:var(--brass-soft);border:1px solid rgba(201,162,39,0.4);text-transform:uppercase;}
@@ -189,6 +194,16 @@ table.ledger{width:100%;border-collapse:collapse;}
 .db-status .dot.red{background:var(--red);box-shadow:0 0 6px rgba(201,106,90,0.7);}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 
+/* ---- Admin approval alerts ---- */
+.bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:36px;height:30px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--cream-dim);cursor:pointer;font-size:0.95rem;padding:0;}
+.bell.has{border-color:var(--brass);color:var(--brass-soft);animation:bellpulse 2.2s ease-in-out infinite;}
+.bell-count{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;align-items:center;justify-content:center;}
+@keyframes bellpulse{0%,100%{box-shadow:0 0 0 0 rgba(201,162,75,0);}50%{box-shadow:0 0 0 5px rgba(201,162,75,0.2);}}
+.approval-banner{max-width:1132px;margin:12px auto 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(201,162,75,0.1);border:1px solid var(--brass);border-radius:9px;padding:10px 16px;font-size:0.88rem;color:var(--cream);}
+#toastHost{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:min(390px,calc(100vw - 36px));}
+.toast{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--brass);border-left:4px solid var(--brass);border-radius:9px;padding:12px 14px;font-size:0.85rem;color:var(--cream);box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+.toast>span{flex:1;line-height:1.45;}
+.toast-x{background:none;border:none;color:var(--cream-dim);font-size:1.15rem;cursor:pointer;padding:0 2px;}
 /* ---- Association branding ---- */
 .brand-wrap{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;}
 .brand-logo{height:92px;width:auto;max-width:170px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.55));}
@@ -246,14 +261,17 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
     <p>Registry · Water &amp; Maintenance Billing · Parking · Documents</p>
   </div>
 </div></header>
+<div class="clock-bar"><span class="ist-clock" id="istClock" title="Indian Standard Time (UTC+05:30)">&#128339; <span id="istClockText">--</span><span class="tz">IST</span></span></div>
 <div class="session-row">
   <span class="db-status" id="dbStatusCompact" style="margin-bottom:0;"><span class="dot yellow" id="dbDot"></span><span id="dbStatusLabel">Connecting…</span></span>
   <span class="role-badge" id="roleBadge">GUEST</span>
   <span class="who" id="whoRow">Viewing as guest</span>
+  <button class="bell" id="bellBtn" onclick="openApprovalsDrawer()" style="display:none;" title="Approvals" aria-label="Pending approvals">&#128276;<span class="bell-count" id="bellCount" style="display:none;"></span></button>
   <button class="btn btn-sm" id="sessionBtn" onclick="openLoginDrawer()">Sign in</button>
   <button class="btn btn-sm btn-primary" onclick="openTvBoard()">📺 TV Board</button>
   <button class="btn btn-sm btn-primary" onclick="openTvNotice()">📢 TV Notice</button>
 </div>
+<div id="approvalBanner" class="approval-banner" style="display:none;"></div>
 <nav class="tabs" id="mainTabs">
   <button data-view="myflat" id="myflatTabBtn" onclick="switchView('myflat')" style="display:none;">My Flat</button>
   <button data-view="directory" class="active" onclick="switchView('directory')">Directory</button>
@@ -391,7 +409,7 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
   <!-- ACCESS LOGS -->
   <div class="view" id="view-logs">
     <div class="toolbar">
-      <div><span style="color:var(--cream-dim);font-size:0.85rem;">Every phone-number reveal is logged with mobile, flat, and timestamp. Entries older than 7 days are cleared automatically.</span></div>
+      <div><span style="color:var(--cream-dim);font-size:0.85rem;">Every phone-number reveal is logged with mobile, flat, and timestamp (shown in IST). Entries older than 7 days are cleared automatically.</span></div>
     </div>
     <div class="ledger-wrap"><table class="ledger">
       <thead><tr><th>Flat</th><th>Mobile</th><th>Viewed at</th></tr></thead>
@@ -402,6 +420,7 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
   <div class="view" id="view-settings"><div id="settingsBody"></div></div>
 </main>
 <footer class="org-foot" id="orgFooter" style="display:none;"></footer>
+<div id="toastHost"></div>
 </div>
 
 <!-- DRAWER -->
@@ -461,6 +480,33 @@ function toRows(result){
 }
 const arg = v => v===undefined||v===null ? {type:'null'} : (typeof v==='number' ? {type:'integer',value:String(v)} : {type:'text',value:String(v)});
 const esc = s => (s??'').toString().replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* ---- IST (Asia/Kolkata) helpers: everything stored is UTC ISO; everything shown is IST ---- */
+const IST_TZ = 'Asia/Kolkata';
+function parseTs(v){
+  if(!v) return null;
+  if(v instanceof Date) return isNaN(v) ? null : v;
+  let t = String(v).trim().replace(' ','T');
+  if(!/(Z|[+-]\d{2}:?\d{2})$/.test(t)) t += 'Z'; // legacy rows without zone were written in UTC
+  const d = new Date(t); return isNaN(d) ? null : d;
+}
+function fmtIST(v, withSeconds){
+  const d = parseTs(v); if(!d) return v ? String(v) : '—';
+  return new Intl.DateTimeFormat('en-IN',{timeZone:IST_TZ,day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:withSeconds?'2-digit':undefined,hour12:true}).format(d);
+}
+function istParts(d){
+  const o = {}; new Intl.DateTimeFormat('en-CA',{timeZone:IST_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d||new Date()).forEach(p=>{ o[p.type]=p.value; });
+  return o;
+}
+function istDate(d){ const p = istParts(d); return `${p.year}-${p.month}-${p.day}`; }   // YYYY-MM-DD in IST
+function istMonth(d){ const p = istParts(d); return `${p.year}-${p.month}`; }            // YYYY-MM in IST
+function tickClock(){
+  const el = document.getElementById('istClockText'); if(!el) return;
+  const d = new Date();
+  const date = new Intl.DateTimeFormat('en-IN',{timeZone:IST_TZ,weekday:'short',day:'2-digit',month:'short',year:'numeric'}).format(d);
+  const time = new Intl.DateTimeFormat('en-IN',{timeZone:IST_TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(d);
+  el.innerHTML = `${date} &middot; <b>${time.toUpperCase()}</b>`;
+}
+tickClock(); setInterval(tickClock, 1000);
 const num = v => { const n = Number(v); return isNaN(n) ? 0 : n; }; // Turso's HTTP API returns integers/reals as strings — always coerce before math
 
 /* ================= SCHEMA + SEED ================= */
@@ -634,6 +680,7 @@ async function doLogin(){
     if(rows.length===0){ errEl.textContent='Incorrect username or password.'; return; }
     sessionStorage.removeItem(RES_KEY); RES_ACCOUNTS=[]; RES_HASH='';
     CURRENT_USER = rows[0];
+    SEEN_PENDING = new Set(); sessionStorage.removeItem('nr_ban_dismissed');
     sessionStorage.setItem('nr_user', JSON.stringify(CURRENT_USER));
     closeDrawer();
     await loadAll();
@@ -643,7 +690,7 @@ async function doLogin(){
 }
 async function logout(){
   sessionStorage.removeItem('nr_user'); sessionStorage.removeItem(RES_KEY);
-  CURRENT_USER = null; RES_ACCOUNTS = []; RES_HASH = ''; RES_ACTIVE = 0;
+  CURRENT_USER = null; RES_ACCOUNTS = []; RES_HASH = ''; RES_ACTIVE = 0; SEEN_PENDING = new Set(); RESIDENTS = [];
   try{ await loadAll(); }catch(e){}
   applyRoleUI(); switchView('directory');
 }
@@ -692,6 +739,7 @@ async function loadAll(){
 function updatePendingBadge(){
   const n = RESIDENTS.filter(r=>r.status==='pending').length;
   const btn = byId('usersTabBtn'); if(btn) btn.textContent = 'Users & Access' + (n ? ` (${n})` : '');
+  refreshApprovalUI(); checkNewApprovals();
 }
 function blockTabsHTML(view){
   return `<button class="chip ${!activeBlock[view]?'active':''}" onclick="setBlock('${view}','')">All blocks</button>` +
@@ -716,6 +764,7 @@ function applyRoleUI(){
   document.getElementById('settingsTabBtn').style.display = admin?'inline-flex':'none';
   document.getElementById('documentsTabBtn').style.display = staff?'inline-flex':'none';
   document.getElementById('myflatTabBtn').style.display = resident?'inline-flex':'none';
+  refreshApprovalUI();
   const activeView = (document.querySelector('.view.active')||{}).id;
   if((!admin && (activeView==='view-users'||activeView==='view-logs'||activeView==='view-settings')) || (!staff && activeView==='view-documents') || (!resident && activeView==='view-myflat')){ switchView('directory'); }
 }
@@ -755,7 +804,7 @@ async function renderNoticeBoard(){
   const month = currentMonthDefault();
   await loadAll(); // pull fresh data every time this board renders — including the hourly auto-refresh
   noticeLastRefreshed = new Date();
-  document.getElementById('noticeUpdated').textContent = `Board reflects ${month} · Last updated ${noticeLastRefreshed.toLocaleString('en-IN')} · Auto-refreshes every hour`;
+  document.getElementById('noticeUpdated').textContent = `Board reflects ${month} · Last updated ${fmtIST(noticeLastRefreshed, true)} · Auto-refreshes every hour`;
 
   const activeFlats = FLATS.filter(f=>num(f.active)!==0);
   document.getElementById('noticeBody').innerHTML = Object.entries(NOTICE_META).map(([kind,meta])=>{
@@ -814,7 +863,7 @@ function closeTvBoard(){
 async function renderTvBoard(){
   const month = currentMonthDefault();
   await loadAll();
-  document.getElementById('tvUpdated').textContent = `${month} · Updated ${new Date().toLocaleString('en-IN')}`;
+  document.getElementById('tvUpdated').textContent = `${month} · Updated ${fmtIST(new Date(), true)}`;
   const activeFlats = FLATS.filter(f=>num(f.active)!==0).sort((a,b)=>a.house_no.localeCompare(b.house_no));
   const cardsHTML = activeFlats.map(f=>{
     let balance = 0;
@@ -856,7 +905,7 @@ function closeTvNotice(){
 async function renderTvNotice(){
   const month = currentMonthDefault();
   await loadAll();
-  document.getElementById('tvnUpdated').textContent = `${month} · Updated ${new Date().toLocaleString('en-IN')}`;
+  document.getElementById('tvnUpdated').textContent = `${month} · Updated ${fmtIST(new Date(), true)}`;
   const activeFlats = FLATS.filter(f=>num(f.active)!==0).sort((a,b)=>a.house_no.localeCompare(b.house_no));
   let cardsHTML = '';
   Object.entries(NOTICE_META).forEach(([kind,meta])=>{
@@ -1083,7 +1132,7 @@ async function verifyOtp(){
     <div class="file-row"><span>Owner Mobile 1</span><span class="mono">${callLine(f.owner_mobile1)}</span></div>
     ${f.owner_mobile2?`<div class="file-row"><span>Owner Mobile 2</span><span class="mono">${callLine(f.owner_mobile2)}</span></div>`:''}
     ${f.tenant_name && f.tenant_name!=='NA' ? `<div class="file-row"><span>Tenant Mobile 1</span><span class="mono">${callLine(f.tenant_mobile1)}</span></div>${f.tenant_mobile2?`<div class="file-row"><span>Tenant Mobile 2</span><span class="mono">${callLine(f.tenant_mobile2)}</span></div>`:''}` : ''}
-    <div class="file-row"><span>Viewed at</span><span class="mono">${new Date().toLocaleString('en-IN')}</span></div>
+    <div class="file-row"><span>Viewed at</span><span class="mono">${fmtIST(new Date(), true)}</span></div>
     <div style="font-size:0.72rem;color:var(--cream-dim);margin:10px 0;">This view has been logged with your mobile number and the time, and closes once you leave this screen. Numbers stay hidden everywhere else — verify again next time you need to look one up.</div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeDrawer()">Done</button>`;
   PENDING_OTP=null;
@@ -1269,7 +1318,7 @@ const BILL_META = {
   maintenance:{table:'maintenance_bills', hasBwssb:false, title:'maintenance bill'},
   parking:{table:'parking_bills', hasBwssb:false, title:'parking charge'}
 };
-function currentMonthDefault(){ return new Date().toISOString().slice(0,7); }
+function currentMonthDefault(){ return istMonth(); }
 
 function renderWater(){
   document.getElementById('waterBlockTabs').innerHTML = blockTabsHTML('water');
@@ -1351,7 +1400,7 @@ async function saveBill(){
   const month = document.getElementById('bMonth').value;
   const amount = parseFloat(document.getElementById('bAmount').value)||0;
   const status = document.getElementById('bStatus').value;
-  const paidDate = status==='paid' ? new Date().toISOString().slice(0,10) : null;
+  const paidDate = status==='paid' ? istDate() : null;
   if(!house||!month){ alert('Choose a flat and month.'); return; }
   if(kind==='water'){
     const bwssb = document.getElementById('bBwssb').value.trim();
@@ -1366,7 +1415,7 @@ async function toggleBillStatus(kind,id,curStatus){
   const meta = BILL_META[kind];
   const cycle = {unpaid:'partial', partial:'paid', paid:'unpaid'};
   const newStatus = cycle[curStatus] || 'unpaid';
-  const paidDate = newStatus==='paid'?new Date().toISOString().slice(0,10):null;
+  const paidDate = newStatus==='paid'?istDate():null;
   await turso([{sql:`UPDATE ${meta.table} SET status=?, paid_date=? WHERE id=?`, args:[arg(newStatus),arg(paidDate),arg(id)]}]);
   await loadAll(); ({water:renderWater,maintenance:renderMaintenance,parking:renderParking})[kind]();
 }
@@ -1384,7 +1433,7 @@ function renderDocuments(){
   let rows = DOCS;
   if(block) rows = rows.filter(d=>d.house_no.startsWith(block+'-'));
   document.getElementById('docBody').innerHTML = rows.length ? rows.map(d=>`
-    <tr><td><span class="house-plate">${d.house_no}</span></td><td>${labelDocType(d.doc_type)}</td><td>${esc(d.file_name)}${d.uploaded_by?' <span class="status-pill partial" style="margin-left:6px;" title="Uploaded by resident '+esc(d.uploaded_by)+'">resident</span>':''}</td><td>${(d.uploaded_at||'').slice(0,10)}</td>
+    <tr><td><span class="house-plate">${d.house_no}</span></td><td>${labelDocType(d.doc_type)}</td><td>${esc(d.file_name)}${d.uploaded_by?' <span class="status-pill partial" style="margin-left:6px;" title="Uploaded by resident '+esc(d.uploaded_by)+'">resident</span>':''}</td><td>${d.uploaded_at?istDate(parseTs(d.uploaded_at)):''}</td>
     <td><button class="icon-btn" onclick="downloadDoc(${d.id})">Download</button>${isAdmin()?`<button class="icon-btn del" onclick="deleteDoc(${d.id})">Delete</button>`:''}</td></tr>`).join('')
     : `<tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px;">No documents uploaded yet.</td></tr>`;
 }
@@ -1445,7 +1494,7 @@ function renderUsers(){
     <tr><td>${esc(u.name)}</td><td>@${esc(u.username)}</td><td><span class="role-badge">${u.role}</span></td>
     <td><button class="icon-btn" onclick="openUserDrawer('${u.username}')">Edit</button>${(u.role!=='admin'||USERS.filter(x=>x.role==='admin').length>1)?`<button class="icon-btn del" onclick="deleteUser('${u.username}')">Delete</button>`:''}</td></tr>`).join('');
   document.getElementById('guestBody').innerHTML = GUESTS.length ? GUESTS.map(g=>`
-    <tr><td>${esc(g.name)||'—'}</td><td>${esc(g.mobile)}</td><td>${(g.added_at||'').slice(0,10)}</td>
+    <tr><td>${esc(g.name)||'—'}</td><td>${esc(g.mobile)}</td><td>${g.added_at?istDate(parseTs(g.added_at)):''}</td>
     <td><button class="icon-btn del" onclick="deleteGuest('${g.mobile}')">Delete</button></td></tr>`).join('')
     : `<tr><td colspan="4" style="text-align:center;color:var(--cream-dim);padding:20px;">No guest numbers added yet.</td></tr>`;
   renderResidentAccounts();
@@ -1454,7 +1503,7 @@ async function renderAccessLogs(){
   const rows = toRows((await turso([{sql:'SELECT house_no,mobile,viewed_at FROM access_logs ORDER BY viewed_at DESC LIMIT 300'}]))[0]);
   ACCESS_LOGS = rows;
   document.getElementById('logsBody').innerHTML = rows.length ? rows.map(l=>`
-    <tr><td><span class="house-plate">${esc(l.house_no)}</span></td><td class="mono">${esc(l.mobile)}</td><td>${(l.viewed_at||'').replace('T',' ').slice(0,16)}</td></tr>`).join('')
+    <tr><td><span class="house-plate">${esc(l.house_no)}</span></td><td class="mono">${esc(l.mobile)}</td><td>${fmtIST(l.viewed_at, true)}</td></tr>`).join('')
     : `<tr><td colspan="3" style="text-align:center;color:var(--cream-dim);padding:20px;">No views logged in the last 7 days.</td></tr>`;
 }
 function guestDrawerHTML(){
@@ -1701,7 +1750,7 @@ function renderMyFlat(){
   const mineCount = docs.filter(d=>d.uploaded_by===a.mobile).length;
   const docRows = docs.length ? docs.map(d=>{
     const by = d.uploaded_by===a.mobile ? 'you' : (d.uploaded_by ? 'another flat member' : 'admin');
-    return `<div class="doc-item"><div><div class="doc-title">${esc(labelDocType(d.doc_type))}</div><div class="doc-meta">${esc(d.file_name)} · ${(d.uploaded_at||'').slice(0,10)} · by ${by}</div></div>
+    return `<div class="doc-item"><div><div class="doc-title">${esc(labelDocType(d.doc_type))}</div><div class="doc-meta">${esc(d.file_name)} · ${d.uploaded_at?istDate(parseTs(d.uploaded_at)):''} · by ${by}</div></div>
       <div><button class="icon-btn" onclick="downloadDoc(${num(d.id)})">View</button>${d.uploaded_by===a.mobile?`<button class="icon-btn del" onclick="deleteResidentDoc(${num(d.id)})">Remove</button>`:''}</div></div>`;
   }).join('') : `<div style="padding:16px 0;color:var(--cream-dim);font-size:0.85rem;">No documents yet. Upload yours below.</div>`;
   const typeOpts = PARTY_DOC_TYPES[a.party].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
@@ -1773,7 +1822,7 @@ function renderResidentAccounts(){
   const pill = st => `<span class="status-pill ${st==='approved'?'paid':(st==='pending'?'partial':'pending')}">${esc(st)}</span>`;
   body.innerHTML = RESIDENTS.length ? RESIDENTS.map(r=>`
     <tr><td><span class="house-plate">${esc(r.house_no)}</span></td><td>${esc(r.name)||'—'}</td><td>${r.party==='owner'?'Owner':'Tenant'}</td><td class="mono">${esc(r.mobile)}</td><td>${pill(r.status)}</td>
-    <td>${r.last_login?esc(r.last_login.replace('T',' ').slice(0,16)):'—'}</td>
+    <td>${r.last_login?esc(fmtIST(r.last_login)):'—'}</td>
     <td>${r.status!=='approved'?`<button class="icon-btn" onclick="setResidentStatus(${num(r.id)},'approved')">Approve</button>`:`<button class="icon-btn" onclick="setResidentStatus(${num(r.id)},'disabled')">Disable</button>`}<button class="icon-btn" onclick="resetResidentPassword('${esc(r.mobile)}')">Reset password</button><button class="icon-btn del" onclick="deleteResidentAccount(${num(r.id)})">Delete</button></td></tr>`).join('')
     : `<tr><td colspan="7" style="text-align:center;color:var(--cream-dim);padding:20px;">No resident accounts yet. Residents create them from Sign in → Create account.</td></tr>`;
 }
@@ -1842,7 +1891,7 @@ function applyBranding(){
   const foot = brandFooterHTML(ORG), fe = byId('orgFooter');
   fe.innerHTML = foot; fe.style.display = foot ? 'flex' : 'none';
   const logo = orgLogo(); const fav = byId('favicon'); if(fav) fav.href = logo || 'data:,';
-  document.title = (ORG.nameEn || 'Nethravathi BDA Apartment') + ' — Registry';
+  BASE_TITLE = (ORG.nameEn || 'Nethravathi BDA Apartment') + ' — Registry'; setPageTitle();
 }
 async function loadSettings(){
   try{
@@ -1943,6 +1992,92 @@ async function resetOrgSettings(){
   ORG = {...ORG_DEFAULTS}; applyBranding(); renderSettings();
 }
 
+/* ================= ADMIN APPROVAL ALERTS ================= */
+let SEEN_PENDING = new Set(), BASE_TITLE = 'Nethravathi BDA Apartment — Registry', APPROVAL_TIMER = null;
+const RES_LIST_SQL = "SELECT id,mobile,house_no,party,name,status,created_at,last_login FROM resident_accounts ORDER BY (status='pending') DESC, house_no";
+function pendingList(){ return RESIDENTS.filter(r=>r.status==='pending'); }
+function setPageTitle(){ const n = isAdmin() ? pendingList().length : 0; document.title = (n ? `(${n}) ` : '') + BASE_TITLE; }
+function refreshApprovalUI(){
+  const admin = isAdmin(), n = admin ? pendingList().length : 0;
+  const bell = byId('bellBtn'), cnt = byId('bellCount'), ban = byId('approvalBanner');
+  if(bell){ bell.style.display = admin ? 'inline-flex' : 'none'; bell.classList.toggle('has', n>0); bell.title = n ? `${n} account request${n>1?'s':''} waiting for approval` : 'No pending approvals'; }
+  if(cnt){ cnt.textContent = n; cnt.style.display = n ? 'inline-flex' : 'none'; }
+  if(ban){
+    let dismissed = num(sessionStorage.getItem('nr_ban_dismissed'));
+    if(n < dismissed){ dismissed = n; sessionStorage.setItem('nr_ban_dismissed', String(n)); }
+    if(admin && n>0 && n>dismissed){
+      ban.innerHTML = `<span>🔔 <b>${n}</b> resident account request${n>1?'s are':' is'} waiting for your approval.</span><span style="display:flex;gap:8px;"><button class="btn btn-sm btn-primary" onclick="openApprovalsDrawer()">Review</button><button class="btn btn-sm" onclick="dismissApprovalBanner()">Dismiss</button></span>`;
+      ban.style.display = 'flex';
+    } else ban.style.display = 'none';
+  }
+  setPageTitle();
+}
+function dismissApprovalBanner(){ sessionStorage.setItem('nr_ban_dismissed', String(pendingList().length)); refreshApprovalUI(); }
+function toast(msg, actionLabel, action){
+  const host = byId('toastHost'); if(!host) return;
+  const t = document.createElement('div'); t.className = 'toast';
+  t.innerHTML = `<span>${msg}</span>${actionLabel?`<button class="btn btn-sm btn-primary" data-act="1">${esc(actionLabel)}</button>`:''}<button class="toast-x" aria-label="Close">&times;</button>`;
+  const a = t.querySelector('[data-act]'); if(a) a.onclick = ()=>{ try{ action&&action(); }finally{ t.remove(); } };
+  t.querySelector('.toast-x').onclick = ()=>t.remove();
+  host.appendChild(t); setTimeout(()=>t.remove(), 15000);
+}
+function notifyBrowser(title, body){
+  try{ if(typeof Notification!=='undefined' && Notification.permission==='granted' && document.hidden) new Notification(title,{body}); }catch(e){}
+}
+// Alerts once per request: on sign-in for everything already waiting, then for each new request that arrives
+function checkNewApprovals(){
+  if(!isAdmin()) return;
+  const pend = pendingList(), fresh = pend.filter(r=>!SEEN_PENDING.has(r.id));
+  pend.forEach(r=>SEEN_PENDING.add(r.id));
+  if(!fresh.length) return;
+  const one = fresh.length===1 ? fresh[0] : null;
+  const text = one ? `New account request: <b>${esc(one.name||one.mobile)}</b> · Flat ${esc(one.house_no)} (${one.party==='owner'?'Owner':'Tenant'})`
+                   : `<b>${fresh.length}</b> resident account requests are waiting for approval`;
+  toast(text, 'Review', openApprovalsDrawer);
+  notifyBrowser('Approval needed', one ? `${one.name||one.mobile} · Flat ${one.house_no}` : `${fresh.length} account requests waiting`);
+}
+async function pollApprovals(){
+  if(!isAdmin() || !dbReady) return;
+  try{
+    const rows = toRows((await turso([{sql:RES_LIST_SQL}]))[0]);
+    RESIDENTS = rows; updatePendingBadge();
+    const v = byId('view-users'); if(v && v.classList.contains('active')) renderResidentAccounts();
+  }catch(e){}
+}
+function startApprovalPolling(){
+  if(APPROVAL_TIMER) return;
+  APPROVAL_TIMER = setInterval(pollApprovals, 45000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollApprovals(); });
+}
+function approvalsDrawerHTML(){
+  const list = pendingList();
+  const perm = typeof Notification==='undefined' ? 'unsupported' : Notification.permission;
+  const rows = list.length ? list.map(r=>`
+    <div class="doc-item"><div><div class="doc-title">${esc(r.name||'—')} <span class="house-plate">${esc(r.house_no)}</span></div>
+      <div class="doc-meta">${r.party==='owner'?'Owner':'Tenant'} · ${esc(r.mobile)} · requested ${esc(fmtIST(r.created_at))}</div></div>
+      <div><button class="icon-btn" onclick="approveFromDrawer(${num(r.id)})">Approve</button><button class="icon-btn del" onclick="rejectResident(${num(r.id)})">Reject</button></div></div>`).join('')
+    : `<div style="padding:18px 0;color:var(--cream-dim);font-size:0.88rem;">Nothing waiting — you're all caught up.</div>`;
+  const alertsLine = perm==='granted' ? '<span style="font-size:0.75rem;color:var(--green);">Browser alerts are on.</span>'
+    : perm==='denied' ? '<span style="font-size:0.75rem;color:var(--cream-dim);">Browser alerts are blocked in this browser.</span>'
+    : perm==='unsupported' ? '' : '<button class="btn btn-sm" onclick="enableBrowserAlerts()">Turn on browser alerts</button>';
+  return `<div class="drawer-head"><div><h2>Approvals</h2><div class="sub">${list.length} resident account request${list.length===1?'':'s'} waiting</div></div><button class="close-x" onclick="closeDrawer()">&times;</button></div>
+  <div class="drawer-body"><div style="font-size:0.78rem;color:var(--cream-dim);line-height:1.5;">Approve only people you can match to the flat — approval lets them see that flat's dues and documents. Reject removes the request; they can ask again.</div>
+  ${rows}
+  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;"><button class="btn btn-sm" onclick="closeDrawer();switchView('users')">Open Users &amp; Access</button>${alertsLine}</div></div>`;
+}
+function openApprovalsDrawer(){ if(isAdmin()) openDrawer(approvalsDrawerHTML()); }
+async function approveFromDrawer(id){ await setResidentStatus(id,'approved'); openApprovalsDrawer(); }
+async function rejectResident(id){
+  if(!isAdmin() || !confirm('Reject this request? It will be removed and the person can request again.')) return;
+  await turso([{sql:'DELETE FROM resident_accounts WHERE id=? AND status=?', args:[arg(num(id)),arg('pending')]}]);
+  await loadAll(); renderUsers(); openApprovalsDrawer();
+}
+async function enableBrowserAlerts(){
+  if(typeof Notification==='undefined'){ alert('This browser does not support notifications.'); return; }
+  try{ await Notification.requestPermission(); }catch(e){}
+  openApprovalsDrawer();
+}
+
 /* ================= DRAWER HELPERS ================= */
 function openDrawer(html){ document.getElementById('drawer').innerHTML = html; document.getElementById('drawer').classList.add('show'); document.getElementById('overlay').classList.add('show'); }
 function closeDrawer(){ document.getElementById('drawer').classList.remove('show'); document.getElementById('overlay').classList.remove('show'); }
@@ -1954,6 +2089,7 @@ async function boot(){
   applyRoleUI();
   if(isResident()) switchView('myflat'); else renderDirectory();
   startNoticeAutoRefresh();
+  startApprovalPolling();
 }
 window.addEventListener('DOMContentLoaded', async ()=>{
   applyBranding();
