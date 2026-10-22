@@ -347,6 +347,81 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
 .seal-big{position:absolute;right:20px;bottom:20px;z-index:3;width:120px;height:120px;border-radius:50%;border:4px double var(--green);color:var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:800;letter-spacing:.08em;font-size:.72rem;line-height:1.35;transform:rotate(-14deg);background:rgba(17,21,29,.6);opacity:.93;pointer-events:none;}
 .seal-big b{font-size:1.6rem;}
 ::-webkit-scrollbar{width:8px;height:8px;} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+/* ================= ENHANCEMENTS (Oct 2026) ================= */
+/* ---- Trusted member badge (3D look) ---- */
+.trust3d{display:inline-flex;align-items:center;gap:5px;margin:4px 6px 0 0;padding:2px 9px 2px 3px;border-radius:999px;font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#3a2a00;background:linear-gradient(145deg,#fff3b0,#e3c667 45%,#b8901c);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 3px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.4);vertical-align:middle;}
+.trust3d i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.72rem;background:radial-gradient(circle at 30% 25%,#fff,#9fe3b3 40%,#2e8b57);box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 -2px 3px rgba(0,0,0,.3);animation:trustspin 6s ease-in-out infinite;}
+@keyframes trustspin{0%,100%{transform:rotateY(-28deg)}50%{transform:rotateY(28deg)}}
+.trust-big{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:10px;}
+.trust-big span{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:radial-gradient(circle at 30% 25%,#e9fff0,#7fd69a 45%,#1f7a46);box-shadow:0 10px 24px rgba(0,0,0,.55),inset 0 -8px 12px rgba(0,0,0,.35),inset 0 5px 8px rgba(255,255,255,.6);animation:trustspin 5s ease-in-out infinite;}
+.trust-big b{font-family:'Source Serif 4',serif;color:#ffe9a8;font-size:1.1rem;}
+.trust-big small{color:#d9c48f;font-size:.72rem;}
+
+/* ---- Document vault: banker avatar, PIN gate, book ---- */
+.vault-overlay{position:fixed;inset:0;z-index:400;background:radial-gradient(900px 600px at 50% 30%,rgba(0,0,0,.72),rgba(0,0,0,.92));display:none;align-items:center;justify-content:center;padding:14px;overflow:auto;}
+.vault-shell{width:min(1040px,100%);max-height:100%;display:flex;flex-direction:column;gap:12px;}
+.vault-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--cream);}
+.vault-gate{margin:auto;background:linear-gradient(160deg,var(--panel-raised),var(--panel));border:1px solid var(--brass);border-radius:16px;padding:30px 28px;width:min(380px,100%);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:12px;}
+.vault-gate input{text-align:center;letter-spacing:.45em;font-size:1.35rem;background:var(--bg-deep);border:1px solid var(--line);color:var(--cream);border-radius:10px;padding:10px;}
+.vault-bank{width:84px;height:84px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.6rem;background:radial-gradient(circle at 30% 25%,#fff3b0,#e3c667 40%,#8a6d1d);box-shadow:0 8px 20px rgba(0,0,0,.55),inset 0 -6px 10px rgba(0,0,0,.35),inset 0 4px 6px rgba(255,255,255,.5);animation:vfloat 3.5s ease-in-out infinite;flex:0 0 auto;}
+.vault-bank.sm{width:52px;height:52px;font-size:1.5rem;animation:none;margin:0;}
+@keyframes vfloat{0%,100%{transform:translateY(0) rotateY(-12deg)}50%{transform:translateY(-6px) rotateY(12deg)}}
+.vault-book{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:min(560px,70vh);border-radius:10px;background:#f4ecd8;color:#2b2418;box-shadow:0 24px 70px rgba(0,0,0,.65),0 0 0 6px #5b3a1e,0 0 0 8px #3a2410;perspective:1600px;overflow:hidden;}
+.vault-book::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:44px;margin-left:-22px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.2) 45%,rgba(0,0,0,.34) 50%,rgba(0,0,0,.2) 55%,transparent);z-index:3;pointer-events:none;}
+.vb-left,.vb-right{padding:26px 28px;display:flex;flex-direction:column;gap:10px;min-width:0;overflow:auto;position:relative;}
+.vb-left{background:linear-gradient(90deg,#efe5cb,#f6efdc);border-right:1px solid rgba(0,0,0,.1);transform-origin:right center;}
+.vb-right{background:linear-gradient(270deg,#efe5cb,#f6efdc);transform-origin:left center;}
+.vb-right.flip-next{animation:vbnext .55s ease;} .vb-left.flip-prev{animation:vbprev .55s ease;}
+@keyframes vbnext{from{transform:rotateY(-75deg);opacity:.15}to{transform:rotateY(0);opacity:1}}
+@keyframes vbprev{from{transform:rotateY(75deg);opacity:.15}to{transform:rotateY(0);opacity:1}}
+.vb-cover{background:linear-gradient(135deg,#5b3a1e,#3a2410) !important;color:#f3e2b3;align-items:center;justify-content:center;text-align:center;}
+.vb-h{font-family:'Source Serif 4',serif;font-size:1.35rem;font-weight:700;color:#4a2f14;margin:0;}
+.vb-cover .vb-h{color:#f3e2b3;}
+.vb-meta{font-size:.8rem;color:#6b5a40;line-height:1.5;overflow-wrap:anywhere;}
+.vb-cover .vb-meta{color:#d9c48f;}
+.vb-prev{flex:1;min-height:320px;background:#fff;border:1px solid rgba(0,0,0,.15);border-radius:4px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.vb-prev img{max-width:100%;max-height:60vh;object-fit:contain;} .vb-prev iframe{width:100%;height:100%;min-height:380px;border:0;}
+.vb-nav{display:flex;justify-content:center;align-items:center;gap:14px;}
+.vb-toc{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;}
+.vb-toc button{width:100%;text-align:left;background:rgba(74,47,20,.06);border:1px solid rgba(74,47,20,.2);color:#3a2410;border-radius:6px;padding:8px 10px;font-size:.84rem;}
+.vb-toc button:hover{background:rgba(74,47,20,.14);}
+.vb-stamp{display:inline-block;border:3px double #2e8b57;color:#2e8b57;font-weight:800;letter-spacing:.1em;font-size:.72rem;padding:4px 10px;border-radius:6px;transform:rotate(-6deg);}
+.vb-stamp.pend{border-color:#b8601f;color:#b8601f;}
+.vb-prev .seal-big{width:96px;height:96px;font-size:.6rem;right:10px;bottom:10px;}
+@media(max-width:760px){.vault-book{grid-template-columns:1fr}.vault-book::before{display:none}}
+
+/* ---- Member photo cards ---- */
+.photo-lg .avatar{width:72px;height:72px;font-size:1.6rem;}
+
+/* ---- Car-start admin sign-in ---- */
+.car-dash{display:flex;align-items:center;gap:14px;margin:2px 0 4px;}
+.engine-btn{flex:0 0 auto;width:78px;height:78px;border-radius:50%;border:3px solid #7a7f8a;background:radial-gradient(circle at 35% 30%,#4a5262,#1a1f29);color:var(--cream-dim);font-size:.52rem;font-weight:800;letter-spacing:.08em;line-height:1.3;box-shadow:0 0 0 5px var(--bg-deep),0 6px 14px rgba(0,0,0,.5),inset 0 -4px 8px rgba(0,0,0,.5);transition:.2s;}
+.engine-btn:active{transform:scale(.94);}
+.engine-btn.on{border-color:var(--red);color:#fff;box-shadow:0 0 0 5px var(--bg-deep),0 0 22px rgba(201,106,90,.85),inset 0 -4px 8px rgba(0,0,0,.5);animation:rev .3s ease-in-out infinite alternate;}
+@keyframes rev{from{transform:translateX(-.8px)}to{transform:translateX(.8px)}}
+.car-hint{font-size:.78rem;color:var(--cream-dim);line-height:1.5;}
+.car-slide{background:linear-gradient(90deg,transparent 0 0) , repeating-linear-gradient(90deg,var(--line) 0 16px,transparent 16px 32px) center/100% 2px no-repeat, var(--bg-deep);}
+.car-slide.locked{opacity:.45;pointer-events:none;}
+.car-slide .slide-knob{background:#1a1f29;border:2px solid var(--brass);}
+.car-slide.on .slide-knob{animation:rev .25s ease-in-out infinite alternate;box-shadow:0 0 14px var(--brass);}
+.car-slide .car-ico{display:inline-block;transform:scaleX(-1);font-size:1.25rem;line-height:1;}
+.car-slide .gate{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1.25rem;pointer-events:none;}
+.car-slide .slide-label{padding-left:44px;padding-right:34px;}
+
+/* ---- Admin left index ---- */
+main.has-index{max-width:1380px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start;}
+main.has-index>.view{grid-column:2;min-width:0;}
+.admin-index{grid-column:1;grid-row:1 / span 30;position:sticky;top:14px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;flex-direction:column;gap:4px;}
+.ai-title{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brass-soft);font-weight:700;padding:6px 8px 8px;}
+.ai-item{text-align:left;background:transparent;border:1px solid transparent;color:var(--cream-dim);padding:10px 12px;border-radius:8px;font-size:.86rem;font-weight:500;display:flex;gap:10px;align-items:center;width:100%;}
+.ai-item[hidden]{display:none;}
+.ai-item:hover{background:var(--panel-raised);color:var(--cream);}
+.ai-item.active{background:rgba(201,162,39,.14);border-color:var(--brass);color:var(--brass-soft);font-weight:600;}
+.ai-item:focus-visible{outline:2px solid var(--brass);outline-offset:1px;}
+.ai-hint{font-size:.66rem;color:var(--cream-dim);padding:10px 8px 2px;line-height:1.5;}
+@media(max-width:820px){main.has-index{display:block;}.admin-index{position:static;flex-direction:row;overflow-x:auto;margin-bottom:14px;}.ai-hint{display:none;}.ai-item{width:auto;white-space:nowrap;}}
+
 </style>
 </head>
 <body>
@@ -366,8 +441,7 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
   <span class="who" id="whoRow">Viewing as guest</span>
   <button class="bell" id="bellBtn" onclick="openApprovalsDrawer()" style="display:none;" title="Approvals" aria-label="Pending approvals">&#128276;<span class="bell-count" id="bellCount" style="display:none;"></span></button>
   <button class="btn btn-sm" id="sessionBtn" onclick="openLoginDrawer()">Sign in</button>
-  <button class="btn btn-sm btn-primary" onclick="openTvBoard()">📺 TV Board</button>
-  <button class="btn btn-sm btn-primary" onclick="openTvNotice()">📢 TV Notice</button>
+  <button class="btn btn-sm btn-primary" onclick="openTvNotice()">📺 TV Board</button>
 </div>
 <div id="approvalBanner" class="approval-banner" style="display:none;"></div>
 <nav class="tabs" id="mainTabs">
@@ -386,6 +460,7 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
 </nav>
 
 <main>
+  <aside id="adminIndex" class="admin-index" role="listbox" aria-label="Admin sections" style="display:none;"></aside>
   <!-- DASHBOARD -->
   <div class="view active" id="view-dashboard"><div id="dashboardBody"></div></div>
 
@@ -550,6 +625,7 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
 <div id="docPreview" class="dp-overlay" onclick="if(event.target===this)closeDocPreview()">
   <div class="dp-box"><div class="dp-head"><div><div id="dpTitle"></div><div id="dpMeta"></div></div><div id="dpActions"></div><button class="close-x" onclick="closeDocPreview()" aria-label="Close preview">&times;</button></div><div class="dp-body" id="dpBody"></div></div>
 </div>
+<div id="vaultOverlay" class="vault-overlay" onclick="if(event.target===this)closeVault()"><div class="vault-shell" id="vaultShell"></div></div>
 <div id="toastHost"></div>
 </div>
 
@@ -557,25 +633,9 @@ footer.org-foot a{color:var(--blue);text-decoration:none;}
 <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer"></div>
 
-<!-- TV BOARD -->
-<div id="tvBoardOverlay">
-  <div class="tv-head">
-    <div class="board-frame tv-brand" style="padding:10px 28px;"><span id="tvLogo"></span><h1 id="tvTitle" style="font-size:1.5rem;margin:0;">Nethravathi BDA Apartment — Dues Board</h1></div>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <span id="tvUpdated" class="tv-updated"></span>
-      <button class="btn" onclick="closeTvBoard()">✕ Exit</button>
-    </div>
-  </div>
-  <div class="tv-legend">
-    <span><span class="sw" style="background:var(--green);"></span> Fully paid</span>
-    <span><span class="sw" style="background:var(--red);"></span> Balance due</span>
-  </div>
-  <div class="tv-viewport"><div id="tvGrid" class="tv-grid"></div></div>
-</div>
-
 <div id="tvNoticeOverlay">
   <div class="tv-head">
-    <div class="board-frame tv-brand" style="padding:10px 28px;"><span id="tvnLogo"></span><h1 id="tvnTitle" style="font-size:1.5rem;margin:0;">Nethravathi BDA Apartment — Dues Notice</h1></div>
+    <div class="board-frame tv-brand" style="padding:10px 28px;"><span id="tvnLogo"></span><h1 id="tvnTitle" style="font-size:1.5rem;margin:0;">Nethravathi BDA Apartment — Dues Board</h1></div>
     <div style="display:flex;align-items:center;gap:16px;">
       <span id="tvnUpdated" class="tv-updated"></span>
       <span style="display:flex;gap:6px;"><button class="chip" id="tvnSrcLive" onclick="setTvnSource('live')">Live board</button><button class="chip" id="tvnSrcLocal" onclick="setTvnSource('local')">Registry data</button></span>
@@ -692,6 +752,7 @@ async function ensureSchema(){
   try{ await turso([{sql:`ALTER TABLE documents ADD COLUMN uploaded_by TEXT`}]); }catch(e){}
   try{ await turso([{sql:`CREATE TABLE IF NOT EXISTS resident_accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, mobile TEXT, house_no TEXT, party TEXT, name TEXT, password_hash TEXT, status TEXT DEFAULT 'pending', created_at TEXT, last_login TEXT, UNIQUE(mobile, house_no))`}]); }catch(e){ console.warn('resident_accounts setup failed', e); }
   try{ await turso([{sql:`CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)`}]); }catch(e){ console.warn('app_settings setup failed', e); }
+  try{ await turso([{sql:`CREATE TABLE IF NOT EXISTS vault_pins (house_no TEXT, party TEXT, pin_hash TEXT, set_at TEXT, PRIMARY KEY(house_no,party))`}]); }catch(e){ console.warn('vault_pins setup failed', e); }
   // Document verification, point-in-time backups and per-flat change history
   for(const col of ['verified INTEGER DEFAULT 0','verified_by TEXT','verified_at TEXT']){ try{ await turso([{sql:`ALTER TABLE documents ADD COLUMN ${col}`}]); }catch(e){} }
   try{ await turso([{sql:BACKUPS_DDL},{sql:FLAT_HISTORY_DDL}]); }catch(e){ console.warn('backup tables setup failed', e); }
@@ -770,7 +831,7 @@ function isAdmin(){ return !!(CURRENT_USER && CURRENT_USER.role==='admin'); }
 function isResident(){ return !!(CURRENT_USER && CURRENT_USER.role==='resident'); }
 function isStaff(){ return !!(CURRENT_USER && CURRENT_USER.role!=='resident'); }
 const byId = id => document.getElementById(id);
-function loginDrawerHTML(mode){
+function loginDrawerHTML(mode,note){
   const seg = `<div class="seg">
     <button class="${mode==='resident'?'on':''}" onclick="openLoginDrawer('resident')">Resident</button>
     <button class="${mode==='signup'?'on':''}" onclick="openLoginDrawer('signup')">Create account</button>
@@ -780,8 +841,8 @@ function loginDrawerHTML(mode){
   if(mode==='admin'){
     body = `
     <div class="field-group"><label>Username</label><input id="loginUser" placeholder="admin"></div>
-    <div class="field-group"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Sign in</button>
+    <div class="field-group"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')startEngine()"></div>
+    ${carStartHTML()}
     <div class="err" id="loginErr"></div>
     ${/* <div class="hint">First time here? Default login is <b>admin</b> / <b>admin123</b>.</div> */''}`;
   } else if(mode==='signup'){
@@ -794,7 +855,7 @@ function loginDrawerHTML(mode){
     <div class="err" id="suErr"></div>`;
   } else {
     body = `
-    <div class="field-group"><label>Registered mobile number</label><input id="resMobile" type="tel" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
+    ${note?`<div class="unlock-banner" style="margin:0;">${esc(note)}</div>`:''}<div class="field-group"><label>Registered mobile number</label><input id="resMobile" type="tel" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number"></div>
     <div class="field-group"><label>Password</label><input id="resPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')residentSignIn()"></div>
     ${slideHTML('slideSignIn','Slide to sign in','residentSignIn')}
     <div class="err" id="resErr"></div>
@@ -804,7 +865,7 @@ function loginDrawerHTML(mode){
   <div class="drawer-head"><div><h2>${titles[mode][0]}</h2><div class="sub">${titles[mode][1]}</div></div><button class="close-x" onclick="closeDrawer()">&times;</button></div>
   <div class="drawer-body">${seg}${body}</div>`;
 }
-function openLoginDrawer(mode){ openDrawer(loginDrawerHTML(mode||'resident')); }
+function openLoginDrawer(mode,note){ openDrawer(loginDrawerHTML(mode||'resident',note)); }
 function openAdminLoginDrawer(){ openLoginDrawer('admin'); }
 async function doLogin(){
   const u = document.getElementById('loginUser').value.trim();
@@ -843,6 +904,7 @@ let FLATS=[], WATER=[], MAINT=[], PARK=[], DOCS=[], USERS=[], GUESTS=[], ACCESS_
 let RES_ACCOUNTS=[], RES_ACTIVE=0, RES_HASH=''; // signed-in resident: approved account rows (one per flat), active flat index, password hash for session re-check
 let PHOTOS = {}; // key: `${house_no}:owner` or `${house_no}:tenant` -> "base64|mime"
 let PENDING_OTP = null, PENDING_MOBILE = null, PENDING_HOUSE = null;
+let TRUST = {}, AFTER_LOGIN = null;
 const BLOCKS = ['A','B','C','D','E','F','G','H'];
 let activeBlock = {directory:'',water:'',parking:'',maintenance:'',documents:''};
 
@@ -882,6 +944,7 @@ async function loadAll(){
   payLoadDb('water', toRows(bpRes)); payLoadDb('maintenance', toRows(mpRes));
   PHOTOS = {};
   toRows(phRes).forEach(p=>{ PHOTOS[p.house_no+':'+(p.doc_type==='owner_photo'?'owner':'tenant')] = p.file_data; });
+  await loadTrust(); await loadPayHidden();
   updatePendingBadge();
 }
 function updatePendingBadge(){
@@ -929,7 +992,7 @@ function switchView(v){
   document.querySelectorAll('#mainTabs button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  ({dashboard:renderDashboard,backups:renderBackups,settings:renderSettings,myflat:renderMyFlat,directory:renderDirectory,notice:renderNoticeBoard,water:renderWater,parking:renderParking,maintenance:renderMaintenance,documents:renderDocuments,users:renderUsers,logs:renderAccessLogs})[v]();
+  ({dashboard:renderDashboard,backups:renderBackups,settings:renderSettings,myflat:renderMyFlat,directory:renderDirectory,notice:renderNoticeBoard,water:renderWater,parking:renderParking,maintenance:renderMaintenance,documents:renderDocuments,users:renderUsers,logs:renderAccessLogs})[v](); updateAdminIndex(v);
 }
 
 /* ================= DIRECTORY ================= */
@@ -997,43 +1060,6 @@ function startNoticeAutoRefresh(){
       renderNoticeBoard();
     }
   }, 60*60*1000); // every 1 hour
-}
-
-/* ================= TV BOARD (full-screen kiosk display) ================= */
-let tvRefreshTimer = null;
-async function openTvBoard(){
-  document.getElementById('tvBoardOverlay').classList.add('show');
-  await renderTvBoard();
-  if(tvRefreshTimer) clearInterval(tvRefreshTimer);
-  tvRefreshTimer = setInterval(renderTvBoard, 5*60*1000); // meant to stay up on a screen — refresh every 5 min
-}
-function closeTvBoard(){
-  document.getElementById('tvBoardOverlay').classList.remove('show');
-  if(tvRefreshTimer){ clearInterval(tvRefreshTimer); tvRefreshTimer=null; }
-}
-async function renderTvBoard(){
-  const month = currentMonthDefault();
-  await loadAll();
-  document.getElementById('tvUpdated').textContent = `${month} · Updated ${fmtIST(new Date(), true)}`;
-  const activeFlats = FLATS.filter(f=>num(f.active)!==0).sort((a,b)=>a.house_no.localeCompare(b.house_no));
-  const cardsHTML = activeFlats.map(f=>{
-    let balance = 0;
-    [WATER,MAINT,PARK].forEach(arr=>{
-      const bill = arr.find(b=>b.house_no===f.house_no && b.month===month);
-      if(bill && bill.status!=='paid') balance += num(bill.amount);
-    });
-    const due = balance>0;
-    return `
-    <div class="tv-card ${due?'tv-due':'tv-paid'}">
-      <div class="tv-house">${f.house_no}</div>
-      <div class="tv-name">${esc(f.owner_name)||'Not on record'}</div>
-      <div class="tv-amount">₹${balance.toLocaleString('en-IN')}</div>
-      <div class="tv-status">${due?'Balance Due':'Fully Paid'}</div>
-    </div>`;
-  }).join('');
-  const grid = document.getElementById('tvGrid');
-  grid.innerHTML = cardsHTML + cardsHTML; // duplicated once so the loop wraps seamlessly at -50%
-  grid.style.animationDuration = Math.max(activeFlats.length * 3, 20) + 's'; // ~3s per house, floor so a small building still moves smoothly
 }
 
 /* ---- TV Notice (full-screen kiosk display of the Notice Board, per category) ---- */
@@ -1112,7 +1138,7 @@ function renderDirectory(){
   const admin = isAdmin();
   document.getElementById('dirUnlockBanner').innerHTML = admin ? '' : `
     <div class="unlock-banner">
-      <span>🔒 Phone numbers are hidden. Pick a flat, verify your mobile, and view its number once.</span>
+      <span>🔒 Phone numbers are hidden. ${phoneGate()?"Sign in as a member, then verify your mobile number with an OTP to view any flat's number.":"Pick a flat, verify your mobile, and view its number once."}</span>
       <button class="btn btn-sm btn-primary" onclick="openOtpDrawer()">View a phone number</button>
     </div>`;
 
@@ -1143,7 +1169,7 @@ function renderDirectory(){
         <div class="card-head">
           <div class="block-house">BLOCK ${f.block} · FLAT ${f.house_no.split('-').slice(1).join('-')}</div>
           <div class="owner-name">${esc(f.owner_name)||'Not on record'}</div>
-          <div class="occ-tag occ-${occ}">${occ==='tenant'?'🔑 Tenant occupied':'🏠 Owner occupied'}</div>
+          <div class="occ-tag occ-${occ}">${occ==='tenant'?'🔑 Tenant occupied':'🏠 Owner occupied'}</div>${trustRowHTML(f.house_no)}
         </div>
         ${disabled?'<span class="status-pill pending">disabled</span>':''}
       </div>
@@ -1183,7 +1209,8 @@ function renderDirFilters(){
 }
 /* An approved owner account may see (and add photos to) its own flat, the same way the admin does */
 function isOwnerOf(houseNo){ return isResident() && RES_ACCOUNTS.some(a=>a.house_no===houseNo && a.party==='owner'); }
-function canEditPhoto(houseNo){ return isAdmin() || isOwnerOf(houseNo); }
+function isMemberOf(houseNo){ return isResident() && RES_ACCOUNTS.some(a=>a.house_no===houseNo); }
+function canEditPhoto(houseNo){ return isAdmin() || isMemberOf(houseNo); }
 
 /* ================= SLIDE-TO-CONFIRM BUTTON ================= */
 function slideHTML(id,label,fn){ return `<div class="slide" id="${id}" data-fn="${fn}" data-label="${esc(label)}" role="slider" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><div class="slide-fill"></div><div class="slide-label">${esc(label)}</div><div class="slide-knob">➜</div></div>`; }
@@ -1195,17 +1222,17 @@ function initSlides(){
     const maxX = ()=>Math.max(1, el.clientWidth-knob.offsetWidth-8);
     const set = v=>{ x = Math.max(0,Math.min(v,maxX())); knob.style.transform = `translateX(${x}px)`; fill.style.width = (x+knob.offsetWidth/2+4)+'px'; lab.style.opacity = String(Math.max(0,1-x/(maxX()*0.6))); el.setAttribute('aria-valuenow', String(Math.round(x/maxX()*100))); };
     const back = ()=>{ el.classList.add('anim'); set(0); fill.style.width = '0'; lab.style.opacity = '1'; setTimeout(()=>el.classList.remove('anim'),300); };
-    const reset = ()=>{ el.classList.remove('done'); lab.textContent = el.dataset.label; busy = false; back(); };
+    const reset = ()=>{ el.classList.remove('done'); const g = el.querySelector('.gate'); if(g) g.textContent = '🔒'; lab.textContent = el.dataset.label; busy = false; back(); };
     const complete = async ()=>{
-      if(busy) return; busy = true; el.classList.add('anim','done'); set(maxX()); lab.textContent = 'Please wait…'; lab.style.opacity = '1';
+      if(busy) return; busy = true; el.classList.add('anim','done'); set(maxX()); { const g = el.querySelector('.gate'); if(g) g.textContent = '🔓'; } lab.textContent = 'Please wait…'; lab.style.opacity = '1';
       try{ await window[el.dataset.fn](); }catch(e){ console.warn(e); }
       if(document.body.contains(el)) setTimeout(reset,350);
     };
-    knob.addEventListener('pointerdown',e=>{ if(busy) return; drag = true; startX = e.clientX-x; el.classList.remove('anim'); knob.setPointerCapture(e.pointerId); knob.style.cursor = 'grabbing'; });
+    knob.addEventListener('pointerdown',e=>{ if(busy||el.classList.contains('locked')) return; drag = true; startX = e.clientX-x; el.classList.remove('anim'); knob.setPointerCapture(e.pointerId); knob.style.cursor = 'grabbing'; });
     knob.addEventListener('pointermove',e=>{ if(drag) set(e.clientX-startX); });
     const end = ()=>{ if(!drag) return; drag = false; knob.style.cursor = 'grab'; if(x>=maxX()*0.9) complete(); else back(); };
     knob.addEventListener('pointerup',end); knob.addEventListener('pointercancel',end);
-    el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '||e.key==='ArrowRight'){ e.preventDefault(); complete(); } });
+    el.addEventListener('keydown',e=>{ if(el.classList.contains('locked')) return; if(e.key==='Enter'||e.key===' '||e.key==='ArrowRight'){ e.preventDefault(); complete(); } });
   });
 }
 
@@ -1249,7 +1276,8 @@ async function logAccess(houseNo, mobile){
     await turso([{sql:'INSERT INTO access_logs (house_no,mobile,viewed_at) VALUES (?,?,?)', args:[arg(houseNo),arg(mobile),arg(new Date().toISOString())]}]);
   }catch(e){}
 }
-function otpDrawerHTML(presetHouse){
+function otpDrawerHTML(presetHouse){ if(memberOtpMode()) return otpMemberHTML(presetHouse); return otpLegacyHTML(presetHouse); }
+function otpLegacyHTML(presetHouse){
   const presetFlat = presetHouse ? FLATS.find(f=>f.house_no===presetHouse) : null;
   return `
   <div class="drawer-head"><div><h2>View a phone number</h2><div class="sub">Verify your mobile, see your own flat's number once</div></div><button class="close-x" onclick="closeDrawer()">&times;</button></div>
@@ -1277,7 +1305,7 @@ function otpDrawerHTML(presetHouse){
     <div id="otpReveal" style="display:none;"></div>
   </div>`;
 }
-function openOtpDrawer(presetHouse){ PENDING_OTP=null; PENDING_MOBILE=null; PENDING_HOUSE=null; openDrawer(otpDrawerHTML(presetHouse)); }
+
 // Finds exactly which flat a mobile is registered to (owner/tenant Mobile 1 or 2). Returns the
 // house_no, or null. If somehow duplicated across flats (bad source data), only the first is used —
 // never more than one flat per verification.
@@ -1418,6 +1446,7 @@ function partyDocsSectionHTML(f, party, admin){
   return `
   <div class="field-group">
     <label>${party==='owner'?'Owner documents (possession certificate, ID, etc.)':'Tenant documents (rental agreement, ID, etc.)'}</label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;"><button class="btn btn-sm" onclick="openVault('${f.house_no}','${party}')">🏦 Open document vault</button>${isTrusted(f.house_no,party)?trustBadgeHTML(party):''}</div>
     <div class="ledger-wrap" style="padding:2px 12px;">
       ${docs.length ? docs.map(d=>`<div class="file-row" style="flex-wrap:wrap;gap:6px;"><span>${labelDocType(d.doc_type)} — ${esc(d.file_name)} ${statusPillHTML(d)}</span><span><button class="icon-btn" onclick="previewDoc(${d.id})">Preview</button><button class="icon-btn" onclick="downloadDoc(${d.id})">Download</button>${admin?verifyBtnHTML(d,'flat:'+f.house_no)+`<button class="icon-btn del" onclick="deleteDocInline(${d.id},'${f.house_no}')">Remove</button>`:''}</span></div>`).join('')
         : `<div style="padding:10px 0;color:var(--cream-dim);font-size:0.8rem;">None attached yet.</div>`}
@@ -1719,7 +1748,8 @@ const PAY_BUILTIN_RAW = { water:`#2026-07
 162|17-10-2026|B-104|Ravi (Tenant: Umesh Sheethal)|10000
 160|19-10-2026|E-101|Chenna Chani (Tenant: Sowmya Kiran kumar)|2000`, maintenance:'' };   // reports already loaded: Jul, Aug, Sep–19 Oct 2026 (BWSSB)
 const PAY_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const PAY_DB = {water:[], maintenance:[]};                    // rows uploaded through Sync (stored in the registry database)
+const PAY_DB = {water:[], maintenance:[]};
+const PAY_HIDDEN = {water:new Set(), maintenance:new Set()};                    // rows uploaded through Sync (stored in the registry database)
 const PRS = {water:{sub:'pay',period:'',mode:'list'}, maintenance:{sub:'pay',period:'',mode:'list'}};
 const inr = n => '₹'+Number(n).toLocaleString('en-IN');
 const flipDate = d => String(d).split('-').reverse().join('-');       // dd-mm-yyyy <-> yyyy-mm-dd
@@ -1733,7 +1763,7 @@ function payBuiltin(kind){
   (PAY_BUILTIN_RAW[kind]||'').split('\n').forEach(l=>{
     l = l.trim(); if(!l) return;
     if(l[0]==='#'){ per = l.slice(1); return; }
-    const [bill,date,flat,name,amt] = l.split('|'); out.push(mkPay(per, bill==='-'?'':bill, date, flat, name, amt));
+    const [bill,date,flat,name,amt] = l.split('|'); out.push(mkPay(per, bill==='-'?'':bill, date, flat, name, amt, {bi:out.length}));
   });
   return PAY_BUILT[kind] = out;
 }
@@ -1741,7 +1771,7 @@ function payLoadDb(kind, rows){
   PAY_DB[kind] = rows.map(r=>mkPay(r.period, r.bill_no, flipDate(r.pay_date), r.flat, r.name, num(r.amount), {db:true, id:num(r.id), source:r.source||''}));
 }
 function payRows(kind){
-  const rows = payBuiltin(kind).concat(PAY_DB[kind]||[]).map((r,i)=>Object.assign({}, r, {_i:i}));
+  const rows = payBuiltin(kind).filter(r=>!PAY_HIDDEN[kind].has(r.bi)).concat(PAY_DB[kind]||[]).map((r,i)=>Object.assign({}, r, {_i:i}));
   rows.sort((a,b)=> a.period<b.period?-1 : a.period>b.period?1 : a._i-b._i);
   const n = {}; rows.forEach(r=>{ r.no = n[r.period] = (n[r.period]||0)+1; });
   return rows;
@@ -1795,6 +1825,7 @@ function ensurePayShell(kind){
         <button class="chip" id="${p}ModeFlat" onclick="setPayMode('${kind}','flat')">By flat</button>
         <button class="btn btn-sm" onclick="exportPayCSV('${kind}')">⬇ CSV</button>
         <button class="btn btn-sm btn-primary" id="${p}SyncBtn" onclick="openSyncDrawer('${kind}')" style="display:none;">🔄 Sync (upload PDF)</button>
+        <button class="btn btn-sm btn-primary" id="${p}AddBtn" onclick="openPayEdit('${kind}')" style="display:none;">+ Add payment</button>
       </div>
     </div>
     <div class="block-tabs" id="${p}PeriodChips"></div>
@@ -1812,7 +1843,7 @@ function renderPay(kind){
   const c = PR_KINDS[kind], p = c.p, T = c.target, S = PRS[kind], block = activeBlock[kind], admin = isAdmin();
   const rows = payRows(kind), periods = payPeriods(rows), by = payByFlat(rows), flats = payFlats(by), perMap = {}; periods.forEach(o=>perMap[o.key]=o);
   if(S.period && !perMap[S.period]) S.period = '';
-  byId(p+'SyncBtn').style.display = admin ? 'inline-flex' : 'none';
+  byId(p+'SyncBtn').style.display = admin ? 'inline-flex' : 'none'; byId(p+'AddBtn').style.display = admin ? 'inline-flex' : 'none';
   const tot = f => (by[f.house_no]||{}).tot||0;
   const cls = f => T ? (tot(f)>=T?'s':(tot(f)>0?'p':'n')) : (tot(f)>0?'s':'n');
   const cnt = k => flats.filter(f=>cls(f)===k).length;
@@ -1854,7 +1885,7 @@ function renderPay(kind){
     byId(p+'Stats').innerHTML = `<span><b>${list.length}</b> payments</span><span>Total: <b>${inr(sum)}</b></span>` + (S.period?`<span>${perMap[S.period].range}</span>`:'');
     const cols = 7 + (admin?1:0);
     byId(p+'Table').innerHTML = `<thead><tr><th>#</th><th>Bill No</th><th>Date</th><th>Block</th><th>Flat No</th><th>Name</th><th class="num">Amount</th>${admin?'<th></th>':''}</tr></thead><tbody>` +
-      (list.length ? list.map(r=>`<tr><td>${S.period?r.no:`<span title="${perMap[r.period].label}">${r.no}</span>`}</td><td>${r.bill?esc(r.bill):'<span class="wp-bill-none">—</span>'}</td><td>${r.date}</td><td>${r.block}</td><td><span class="house-plate">${r.flat}</span></td><td>${esc(r.name)}</td><td class="num">${inr(r.amt)}</td>${admin?`<td>${r.db?`<button class="icon-btn del" title="Remove this uploaded payment" onclick="deletePayRow('${kind}',${r.id})">✕</button>`:''}</td>`:''}</tr>`).join('')
+      (list.length ? list.map(r=>`<tr><td>${S.period?r.no:`<span title="${perMap[r.period].label}">${r.no}</span>`}</td><td>${r.bill?esc(r.bill):'<span class="wp-bill-none">—</span>'}</td><td>${r.date}</td><td>${r.block}</td><td><span class="house-plate">${r.flat}</span></td><td>${esc(r.name)}</td><td class="num">${inr(r.amt)}</td>${admin?`<td style="white-space:nowrap;">${payActionsHTML(kind,r)}</td>`:''}</tr>`).join('')
         : `<tr><td colspan="${cols}" style="text-align:center;color:var(--cream-dim);padding:30px;">${rows.length?'No payments match this filter.':'No payments yet — click <b>Sync (upload PDF)</b> and choose a Payments Report PDF.'}</td></tr>`) +
       `</tbody><tfoot><tr><td colspan="6">Total (${list.length} payments)</td><td class="num">${inr(sum)}</td>${admin?'<td></td>':''}</tr></tfoot>`;
   } else {
@@ -2023,7 +2054,7 @@ function renderWater(){
       <td>${bill&&bill.amount!=null?'₹'+Number(bill.amount).toLocaleString('en-IN'):'<span style="color:var(--cream-dim);">—</span>'}</td>
       <td>${bwssbLedgerCell(f.house_no, month, bill)}</td>
       <td>${bill?`<span class="status-pill ${bill.status==='paid'?'paid':(bill.status==='partial'?'partial':'pending')}">${bill.status}</span>`:'<span class="status-pill unrecorded">unrecorded</span>'}</td>
-      <td>${isAdmin() ? (bill?`<button class="icon-btn" onclick="toggleBillStatus('water','${bill.id}','${bill.status}')">Cycle status</button><button class="icon-btn del" onclick="deleteBill('water','${bill.id}')">Delete</button>`:`<button class="icon-btn" onclick="openBillDrawer('water','${f.house_no}','${month}')">Add</button>`) : ''}</td>
+      <td>${isAdmin() ? (bill?`<button class="icon-btn" onclick="openBillEdit('water','${bill.id}')">Edit</button><button class="icon-btn" onclick="toggleBillStatus('water','${bill.id}','${bill.status}')">Cycle status</button><button class="icon-btn del" onclick="deleteBill('water','${bill.id}')">Delete</button>`:`<button class="icon-btn" onclick="openBillDrawer('water','${f.house_no}','${month}')">Add</button>`) : ''}</td>
     </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--cream-dim);padding:30px;">No flats match this filter.</td></tr>`;
 }
 function renderMaintenance(){
@@ -2042,7 +2073,7 @@ function renderMaintenance(){
       <td>${bill&&bill.amount!=null?'₹'+Number(bill.amount).toLocaleString('en-IN'):'<span style="color:var(--cream-dim);">—</span>'}</td>
       <td>${bill?`<span class="status-pill ${bill.status==='paid'?'paid':(bill.status==='partial'?'partial':'pending')}">${bill.status}</span>`:'<span class="status-pill unrecorded">unrecorded</span>'}</td>
       <td>${bill&&bill.paid_date?bill.paid_date:'—'}</td>
-      <td>${isAdmin() ? (bill?`<button class="icon-btn" onclick="toggleBillStatus('maintenance','${bill.id}','${bill.status}')">Cycle status</button><button class="icon-btn del" onclick="deleteBill('maintenance','${bill.id}')">Delete</button>`:`<button class="icon-btn" onclick="openBillDrawer('maintenance','${f.house_no}','${month}')">Add</button>`) : ''}</td>
+      <td>${isAdmin() ? (bill?`<button class="icon-btn" onclick="openBillEdit('maintenance','${bill.id}')">Edit</button><button class="icon-btn" onclick="toggleBillStatus('maintenance','${bill.id}','${bill.status}')">Cycle status</button><button class="icon-btn del" onclick="deleteBill('maintenance','${bill.id}')">Delete</button>`:`<button class="icon-btn" onclick="openBillDrawer('maintenance','${f.house_no}','${month}')">Add</button>`) : ''}</td>
     </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--cream-dim);padding:30px;">No flats match this filter.</td></tr>`;
 }
 function renderParking(){
@@ -2061,7 +2092,7 @@ function renderParking(){
       <td>${num(f.num_cars)}</td><td>${num(f.num_2w)}</td><td>${esc(f.car_details)||'—'}</td>
       <td>${bill&&bill.amount!=null?'₹'+Number(bill.amount).toLocaleString('en-IN'):'<span style="color:var(--cream-dim);">—</span>'}</td>
       <td>${bill?`<span class="status-pill ${bill.status==='paid'?'paid':(bill.status==='partial'?'partial':'pending')}">${bill.status}</span>`:'<span class="status-pill unrecorded">unrecorded</span>'}</td>
-      <td>${isAdmin() ? (bill?`<button class="icon-btn" onclick="toggleBillStatus('parking','${bill.id}','${bill.status}')">Cycle status</button><button class="icon-btn del" onclick="deleteBill('parking','${bill.id}')">Delete</button>`:`<button class="icon-btn" onclick="openBillDrawer('parking','${f.house_no}','${month}')">Add</button>`) : ''}</td>
+      <td>${isAdmin() ? (bill?`<button class="icon-btn" onclick="openBillEdit('parking','${bill.id}')">Edit</button><button class="icon-btn" onclick="toggleBillStatus('parking','${bill.id}','${bill.status}')">Cycle status</button><button class="icon-btn del" onclick="deleteBill('parking','${bill.id}')">Delete</button>`:`<button class="icon-btn" onclick="openBillDrawer('parking','${f.house_no}','${month}')">Add</button>`) : ''}</td>
     </tr>`).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--cream-dim);padding:30px;">No flats match this filter.</td></tr>`;
 }
 
@@ -2091,7 +2122,13 @@ async function saveBill(){
   const status = document.getElementById('bStatus').value;
   const paidDate = status==='paid' ? istDate() : null;
   if(!house||!month){ alert('Choose a flat and month.'); return; }
-  if(kind==='water'){
+  const editId = (document.getElementById('billEditId')||{}).value;
+  if(editId){
+    const arr = {water:WATER, maintenance:MAINT, parking:PARK}[kind], old = arr.find(x=>String(x.id)===String(editId));
+    const pd = status==='paid' ? ((old&&old.paid_date)||istDate()) : null;
+    if(kind==='water'){ const bw = document.getElementById('bBwssb'); await turso([{sql:`UPDATE water_bills SET amount=?,bwssb_amount=?,status=?,paid_date=? WHERE id=?`, args:[arg(amount),arg(bw?bw.value.trim():''),arg(status),arg(pd),arg(num(editId))]}]); }
+    else await turso([{sql:`UPDATE ${meta.table} SET amount=?,status=?,paid_date=? WHERE id=?`, args:[arg(amount),arg(status),arg(pd),arg(num(editId))]}]);
+  } else if(kind==='water'){
     const bwssb = document.getElementById('bBwssb').value.trim();
     await turso([{sql:`INSERT INTO water_bills (house_no,month,amount,bwssb_amount,status,paid_date) VALUES (?,?,?,?,?,?)`, args:[arg(house),arg(month),arg(amount),arg(bwssb),arg(status),arg(paidDate)]}]);
   } else {
@@ -2338,6 +2375,7 @@ async function residentSignIn(){
     await loadAll();
     applyRoleUI();
     switchView('myflat');
+    if(AFTER_LOGIN){ const h = AFTER_LOGIN.house; AFTER_LOGIN = null; openOtpDrawer(h); }
   }catch(e){ errEl.textContent = 'Could not connect: '+e.message; }
 }
 async function residentSignUp(){
@@ -2516,7 +2554,7 @@ function renderMyFlat(){
   <div class="res-hero">
     <div class="plate">${esc(h)}</div>
     <div>
-      <h2>Welcome, ${esc(a.name||'resident')}</h2>
+      <h2>Welcome, ${esc(a.name||'resident')} ${isTrusted(h,a.party)?trustBadgeHTML(a.party):''}</h2>
       <div class="res-sub">Block ${esc(f.block||h.split('-')[0])} · Flat ${esc(h.split('-').slice(1).join('-'))} · <b style="color:var(--brass-soft);">${partyLabel}</b>${occupied?' · Tenant-occupied':''}</div>
     </div>
     <div class="res-facts">
@@ -2526,13 +2564,7 @@ function renderMyFlat(){
     </div>
   </div>
 
-  ${a.party==='owner' ? `<div class="res-section">
-    <h3>Flat details &amp; photos</h3>
-    <div class="res-note">As the owner you can see this flat's full record, including the owner and tenant contacts, and add or replace the owner and tenant photos. Changes to names, numbers or vehicles still go through the admin.</div>
-    <div class="res-card pad" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-      <div style="display:flex;gap:10px;align-items:center;">${avatarHTML(h,'owner',f.owner_name)}${occupied?avatarHTML(h,'tenant',f.tenant_name):''}</div>
-      <button class="btn btn-primary" onclick="openFlatDrawer('${esc(h)}')">Open flat details &amp; photos</button>
-    </div></div>` : ''}
+  ${photosSectionHTML(a,f,h,occupied)}${vaultSectionHTML(a,h)}
   ${bwCard}
   <div class="res-section">
     <h3>Dues</h3>
@@ -2613,7 +2645,7 @@ const ORG_DEFAULTS = {
   phone:'94484 51422',
   logo:'',            // '' = built-in logo, 'removed' = no logo, otherwise an uploaded image (data URL)
   showLogo:'1', showDetails:'1', showTv:'1', showFooter:'1',
-  theme:'', font:'', hiddenTabs:'',
+  theme:'', font:'', hiddenTabs:'', phoneLogin:'1',
   occOwner:'#4f9de0', occTenant:'#ec8f3c', occStyle:'fill'
 };
 let ORG = {...ORG_DEFAULTS}, ORG_DRAFT = null;
@@ -2644,7 +2676,7 @@ function applyBranding(){
   hdr.innerHTML = brandHeaderHTML(ORG) || ORIGINAL_FRAME;
   const tvOn = ORG.showTv==='1', tvLogo = tvOn && ORG.showLogo==='1' ? orgLogo() : '';
   const tvName = tvOn && ORG.nameEn ? ORG.nameEn : 'Nethravathi BDA Apartment';
-  [['tv','Dues Board'],['tvn','Dues Notice']].forEach(([p,label])=>{
+  [['tvn','Dues Board']].forEach(([p,label])=>{
     byId(p+'Logo').innerHTML = tvLogo ? `<img class="tv-logo" src="${tvLogo}" alt="">` : '';
     byId(p+'Title').textContent = tvName+' — '+label;
   });
@@ -2690,7 +2722,7 @@ function renderSettings(){
       <div style="margin:6px 0 16px;">
         <label class="toggle-row"><input type="checkbox" id="orgShowLogo" ${chk(d.showLogo)} onchange="previewOrg()"> Logo (header, TV boards, footer)</label>
         <label class="toggle-row"><input type="checkbox" id="orgShowDetails" ${chk(d.showDetails)} onchange="previewOrg()"> Name, address &amp; mobile in the page header</label>
-        <label class="toggle-row"><input type="checkbox" id="orgShowTv" ${chk(d.showTv)} onchange="previewOrg()"> Logo &amp; name on the TV Board / TV Notice screens</label>
+        <label class="toggle-row"><input type="checkbox" id="orgShowTv" ${chk(d.showTv)} onchange="previewOrg()"> Logo &amp; name on the TV Board screen</label>
         <label class="toggle-row"><input type="checkbox" id="orgShowFooter" ${chk(d.showFooter)} onchange="previewOrg()"> Footer on every page</label>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -2700,7 +2732,7 @@ function renderSettings(){
       <div id="orgMsg" class="err"></div>
     </div>
   </div>
-  ${lookSettingsHTML()}${occSettingsHTML()}
+  ${phoneSettingsHTML()}${lookSettingsHTML()}${occSettingsHTML()}
   <div class="res-section">
     <h3>Preview</h3>
     <div id="orgPreview" class="res-card pad" style="text-align:center;background:linear-gradient(180deg,var(--bg-deep),var(--bg));"></div>
@@ -2750,7 +2782,7 @@ async function saveOrgSettings(){
 }
 async function resetOrgSettings(){
   if(!isAdmin() || !confirm('Reset the logo and all association details to the built-in defaults?')) return;
-  try{ await turso([{sql:'DELETE FROM app_settings'}]); }catch(e){}
+  try{ await turso([{sql:"DELETE FROM app_settings WHERE key NOT LIKE 'pay_hidden_%'"}]); }catch(e){}
   ORG = {...ORG_DEFAULTS}; applyBranding(); renderSettings();
 }
 
@@ -2824,7 +2856,7 @@ function setTabVisible(k,on){ const s=new Set((ORG_DRAFT.hiddenTabs||'').split('
 function pickTheme(n){ ORG_DRAFT.theme=n; applyLook(ORG_DRAFT); renderSettingsKeep(); }
 function pickFont(f){ ORG_DRAFT.font=f; applyLook(ORG_DRAFT); }
 function revertLook(){ applyLook(ORG); renderSettings(); }
-function renderSettingsKeep(){ const g=byId('themeGrid'),y=g?g.scrollTop:0,d=ORG_DRAFT; renderSettings(); ORG_DRAFT.theme=d.theme; ORG_DRAFT.font=d.font; ORG_DRAFT.hiddenTabs=d.hiddenTabs; ORG_DRAFT.occOwner=d.occOwner; ORG_DRAFT.occTenant=d.occTenant; ORG_DRAFT.occStyle=d.occStyle; const g2=byId('themeGrid'); if(g2) g2.scrollTop=y; }
+function renderSettingsKeep(){ const g=byId('themeGrid'),y=g?g.scrollTop:0,d=ORG_DRAFT; renderSettings(); ORG_DRAFT.theme=d.theme; ORG_DRAFT.font=d.font; ORG_DRAFT.hiddenTabs=d.hiddenTabs; ORG_DRAFT.occOwner=d.occOwner; ORG_DRAFT.occTenant=d.occTenant; ORG_DRAFT.occStyle=d.occStyle; ORG_DRAFT.phoneLogin=d.phoneLogin; const g2=byId('themeGrid'); if(g2) g2.scrollTop=y; }
 
 function ownerBackHTML(f){
   const p=PHOTOS[f.house_no+':owner'];
@@ -3253,6 +3285,343 @@ function renderDashboard(){
 }
 
 
+/* ================= ENHANCEMENTS (Oct 2026) ================= */
+
+/* ---- 2) Phone-number access setting (Admin → Association) ---- */
+function phoneGate(){ return ORG.phoneLogin!=='0'; }
+function memberOtpMode(){ return phoneGate() && isResident(); }
+function phoneSettingsHTML(){
+  const d = ORG_DRAFT;
+  return `<div class="res-section"><h3>Phone number access</h3>
+    <div class="res-note">Controls who may reveal mobile numbers in the Directory. When ticked, a visitor must first sign in as a flat member; they then enter their own mobile number and an OTP, and can reveal the numbers of the flat they choose. Every reveal is recorded in Access Logs with the viewer's mobile, the flat and the time.</div>
+    <div class="res-card pad"><label class="toggle-row"><input type="checkbox" ${d.phoneLogin!=='0'?'checked':''} onchange="ORG_DRAFT.phoneLogin=this.checked?'1':'0'"> Members must sign in, then verify with their mobile number + OTP, to view phone numbers</label>
+    <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveOrgSettings()">Save</button></div></div></div>`;
+}
+function openOtpDrawer(presetHouse){
+  PENDING_OTP=null; PENDING_MOBILE=null; PENDING_HOUSE=null;
+  if(phoneGate() && !CURRENT_USER){
+    AFTER_LOGIN = {house: presetHouse||''};
+    openLoginDrawer('resident','Sign in as a flat member first. After that you can verify your mobile number with an OTP and view the numbers you need.');
+    return;
+  }
+  openDrawer(otpDrawerHTML(presetHouse));
+}
+function otpMemberHTML(preset){
+  const flats = FLATS.filter(f=>num(f.active)!==0);
+  return `
+  <div class="drawer-head"><div><h2>View a phone number</h2><div class="sub">Signed-in members · OTP verified · every view is logged</div></div><button class="close-x" onclick="closeDrawer()">&times;</button></div>
+  <div class="drawer-body">
+    <div class="field-group"><label>Which flat's number do you want to view?</label>
+      <select id="otpHouse">${flats.map(f=>`<option value="${esc(f.house_no)}" ${f.house_no===preset?'selected':''}>${esc(f.house_no)} — ${esc(f.owner_name)}</option>`).join('')}</select></div>
+    <div class="field-group"><label>Your mobile number (the one you signed in with)</label><input id="otpMobile" type="tel" maxlength="10" placeholder="10-digit mobile number" inputmode="numeric"></div>
+    <button class="btn btn-primary" onclick="requestMemberOtp()">Send OTP</button>
+    <div class="err" id="otpErr"></div>
+    <div id="otpStep2" style="display:none;flex-direction:column;gap:14px;">
+      <div class="divider"></div>
+      <div class="field-group">
+        <label>Enter the 6-digit code</label>
+        <div style="font-family:'Source Serif 4',serif;font-size:1.6rem;letter-spacing:0.15em;color:var(--brass-soft);text-align:center;background:var(--bg-deep);border:1px dashed var(--brass);border-radius:8px;padding:10px;margin-bottom:4px;" id="otpDisplay"></div>
+        <div style="font-size:0.72rem;color:var(--cream-dim);margin-bottom:6px;">No SMS gateway is connected yet, so the code is shown here directly — enter it below to confirm.</div>
+        <input id="otpInput" maxlength="6" inputmode="numeric" placeholder="6-digit code">
+      </div>
+      <button class="btn btn-primary" onclick="verifyOtp()">Verify</button>
+    </div>
+    <div id="otpReveal" style="display:none;"></div>
+  </div>`;
+}
+function requestMemberOtp(){
+  const err = byId('otpErr'); err.textContent = '';
+  const mobile = normalizeDigits(byId('otpMobile').value).slice(-10);
+  const acct = RES_ACCOUNTS[0];
+  if(mobile.length<10){ err.textContent = 'Enter your 10-digit mobile number.'; return; }
+  if(!acct || normalizeDigits(acct.mobile).slice(-10)!==mobile){ err.textContent = 'Enter the mobile number you signed in with.'; return; }
+  PENDING_MOBILE = mobile; PENDING_HOUSE = byId('otpHouse').value;
+  PENDING_OTP = String(Math.floor(100000 + Math.random()*900000));
+  byId('otpDisplay').textContent = PENDING_OTP;
+  byId('otpStep2').style.display = 'flex';
+}
+
+/* ---- 3) Trusted members + document vault (banker avatar, PIN, book) ---- */
+async function loadTrust(){
+  try{
+    const rows = toRows((await tursoStrict([{sql:"SELECT house_no,party,COUNT(*) AS n,SUM(CASE WHEN COALESCE(verified,0)=1 THEN 1 ELSE 0 END) AS v FROM documents WHERE doc_type NOT IN ('owner_photo','tenant_photo') GROUP BY house_no,party"}]))[0]);
+    TRUST = {}; rows.forEach(r=>{ TRUST[r.house_no+':'+r.party] = {n:num(r.n), v:num(r.v)}; });
+  }catch(e){}
+}
+function isTrusted(h,p){ const t = TRUST[h+':'+p]; return !!(t && t.n>0 && t.v>=t.n); }
+function trustBadgeHTML(party){
+  return `<span class="trust3d" title="Trusted flat member — every ${party} document has been verified by the admin"><i>🛡️</i>Trusted ${party==='owner'?'owner':'tenant'}</span>`;
+}
+function trustRowHTML(h){ return (isTrusted(h,'owner')?trustBadgeHTML('owner'):'') + (isTrusted(h,'tenant')?trustBadgeHTML('tenant'):''); }
+function vaultSectionHTML(a,h){
+  const docs = DOCS.filter(d=>d.house_no===h && d.party===a.party), v = docs.filter(d=>num(d.verified)===1).length, tr = docs.length>0 && v===docs.length;
+  return `<div class="res-section"><h3>Document vault</h3>
+    <div class="res-note">Your ${a.party} documents kept in a PIN-protected book. When the admin has verified every document you earn the Trusted Flat Member badge.</div>
+    <div class="res-card pad" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;"><div class="vault-bank sm">🏦</div>
+      <div style="flex:1;min-width:200px;"><div style="font-size:.92rem;">${docs.length?`<b>${v}</b> of <b>${docs.length}</b> documents verified`:'No documents uploaded yet'}</div>
+      <div style="margin-top:4px;">${tr?trustBadgeHTML(a.party):'<span style="font-size:.76rem;color:var(--cream-dim);">The Trusted badge unlocks when every document is verified.</span>'}</div></div>
+      <button class="btn btn-primary" onclick="openVault('${esc(h)}','${a.party}')">🔐 Open vault</button></div></div>`;
+}
+let VAULT = {};
+const vaultHash = (h,p,pin)=>sha256('nr-vault:'+h+':'+p+':'+pin);
+async function openVault(house, party){
+  const admin = isAdmin();
+  const ok = admin || (isResident() && RES_ACCOUNTS.some(a=>a.house_no===house && a.party===party));
+  if(!ok){ alert("Only this flat's "+party+" account or the admin can open this vault."); return; }
+  VAULT = {house, party, page:0, urls:{}, unlocked:false, tries:0, admin, docs:[], pinHash:''};
+  const row = toRows((await turso([{sql:'SELECT pin_hash FROM vault_pins WHERE house_no=? AND party=?', args:[arg(house),arg(party)]}]))[0])[0];
+  VAULT.pinHash = row ? row.pin_hash : '';
+  byId('vaultOverlay').style.display = 'flex';
+  if(admin){ VAULT.unlocked = true; vaultOpenBook(); } else vaultGate();
+}
+function vaultGate(msg){
+  const V = VAULT, setMode = !V.pinHash;
+  byId('vaultShell').innerHTML = `<div class="vault-gate"><div class="vault-bank">🏦</div>
+    <h2 style="margin:0;color:var(--brass-soft);">${setMode?'Set your vault PIN':'Document vault'}</h2>
+    <div style="font-size:.82rem;color:var(--cream-dim);line-height:1.5;">Flat ${esc(V.house)} · ${V.party==='owner'?'Owner':'Tenant'} documents.${setMode?' Choose a 4–6 digit PIN. You will need it each time you open the book.':' Enter your PIN to open the book.'}</div>
+    <input id="vpPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="PIN" onkeydown="if(event.key==='Enter')${setMode?'vaultSetPin()':'vaultUnlock()'}">
+    ${setMode?`<input id="vpPin2" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="Confirm PIN" onkeydown="if(event.key==='Enter')vaultSetPin()">`:''}
+    <button class="btn btn-primary" onclick="${setMode?'vaultSetPin()':'vaultUnlock()'}">${setMode?'Set PIN &amp; open':'🔓 Unlock'}</button>
+    <button class="btn" onclick="closeVault()">Cancel</button>
+    <div class="err" id="vpErr">${esc(msg||'')}</div>
+    ${setMode?'':'<div style="font-size:.72rem;color:var(--cream-dim);">Forgot your PIN? Ask the admin to reset it.</div>'}</div>`;
+  setTimeout(()=>{ const i = byId('vpPin'); if(i) i.focus(); }, 50);
+}
+async function vaultSetPin(){
+  const V = VAULT, er = byId('vpErr'); er.textContent = '';
+  const p = byId('vpPin').value.trim(), p2 = byId('vpPin2').value.trim();
+  if(!/^\d{4,6}$/.test(p)){ er.textContent = 'PIN must be 4 to 6 digits.'; return; }
+  if(p!==p2){ er.textContent = 'The two PINs do not match.'; return; }
+  try{
+    const h = await vaultHash(V.house,V.party,p);
+    await tursoStrict([{sql:'INSERT INTO vault_pins (house_no,party,pin_hash,set_at) VALUES (?,?,?,?) ON CONFLICT(house_no,party) DO UPDATE SET pin_hash=excluded.pin_hash,set_at=excluded.set_at', args:[arg(V.house),arg(V.party),arg(h),arg(new Date().toISOString())]}]);
+    V.pinHash = h; V.unlocked = true; vaultOpenBook();
+  }catch(e){ er.textContent = 'Could not save the PIN: '+e.message; }
+}
+async function vaultUnlock(){
+  const V = VAULT, er = byId('vpErr'); er.textContent = '';
+  const p = byId('vpPin').value.trim();
+  if(V.tries>=5){ er.textContent = 'Too many wrong attempts. Close and try again later, or ask the admin to reset the PIN.'; return; }
+  if(!/^\d{4,6}$/.test(p)){ er.textContent = 'Enter your 4–6 digit PIN.'; return; }
+  if(await vaultHash(V.house,V.party,p)!==V.pinHash){ V.tries++; er.textContent = 'Incorrect PIN. '+(5-V.tries)+' attempt(s) left.'; byId('vpPin').value = ''; return; }
+  V.unlocked = true; vaultOpenBook();
+}
+async function vaultResetPin(){
+  if(!isAdmin() || !confirm('Reset this vault PIN? The member will be asked to set a new one next time.')) return;
+  await turso([{sql:'DELETE FROM vault_pins WHERE house_no=? AND party=?', args:[arg(VAULT.house),arg(VAULT.party)]}]);
+  VAULT.pinHash = ''; toast('✓ Vault PIN reset');
+}
+function vaultOpenBook(){
+  const V = VAULT; V.docs = DOCS.filter(d=>d.house_no===V.house && d.party===V.party); V.page = 0;
+  byId('vaultShell').innerHTML = `<div class="vault-top"><div style="display:flex;align-items:center;gap:12px;"><div class="vault-bank sm">🏦</div><div><div style="font-weight:700;color:var(--brass-soft);">Flat ${esc(V.house)} · ${V.party==='owner'?'Owner':'Tenant'} vault</div><div style="font-size:.76rem;color:var(--cream-dim);" id="vbSub"></div></div></div>
+    <div style="display:flex;gap:8px;">${V.admin?'<button class="btn btn-sm btn-danger" onclick="vaultResetPin()">Reset PIN</button>':''}<button class="btn btn-sm" onclick="closeVault()">🔒 Lock &amp; close</button></div></div>
+    <div class="vault-book" id="vbBook"></div>
+    <div class="vb-nav"><button class="btn" onclick="vaultTurn(-1)">‹ Previous page</button><span id="vbCount" style="font-size:.82rem;color:var(--cream-dim);min-width:90px;text-align:center;"></span><button class="btn" onclick="vaultTurn(1)">Next page ›</button></div>`;
+  vaultRender(0);
+}
+function vaultTurn(dir){ const V = VAULT; if(!V.unlocked) return; const np = V.page+dir; if(np<0 || np>V.docs.length) return; V.page = np; vaultRender(dir); }
+function vaultGo(i){ const V = VAULT; if(!V.unlocked) return; const dir = i>=V.page ? 1 : -1; V.page = i; vaultRender(dir); }
+async function vaultRender(dir){
+  const V = VAULT, n = V.docs.length, book = byId('vbBook'); if(!book) return;
+  const ver = V.docs.filter(d=>num(d.verified)===1).length, trusted = n>0 && ver===n, pg = V.page;
+  byId('vbCount').textContent = pg===0 ? 'Cover' : `Page ${pg} of ${n}`;
+  byId('vbSub').textContent = n ? `${ver} of ${n} documents verified${trusted?' · Trusted':''}` : 'No documents yet';
+  if(pg===0){
+    const toc = n ? V.docs.map((d,i)=>`<li><button onclick="vaultGo(${i+1})">${num(d.verified)===1?'✅':'⏳'} ${esc(labelDocType(d.doc_type))} <span style="color:#8a7550;">— ${esc(d.file_name)}</span></button></li>`).join('') : '<li class="vb-meta">No documents have been added to this vault yet.</li>';
+    book.innerHTML = `<div class="vb-left vb-cover ${dir<0?'flip-prev':''}"><div class="vault-bank" style="width:110px;height:110px;font-size:3.4rem;">🏦</div>
+        <h3 class="vb-h">Document Vault</h3><div class="vb-meta">Flat ${esc(V.house)} · ${V.party==='owner'?'Owner':'Tenant'}</div>
+        ${trusted?'<div class="trust-big"><span>🛡️</span><b>Trusted Flat Member</b><small>All documents verified by the admin</small></div>':`<div class="vb-meta" style="margin-top:10px;">${ver} of ${n} documents verified.<br>Verified members earn the Trusted badge.</div>`}</div>
+      <div class="vb-right ${dir>0?'flip-next':''}"><h3 class="vb-h">Contents</h3><div class="vb-meta">Open a page, or use the ← → keys.</div><ul class="vb-toc">${toc}</ul></div>`;
+    return;
+  }
+  const d = V.docs[pg-1], isV = num(d.verified)===1;
+  book.innerHTML = `<div class="vb-left ${dir<0?'flip-prev':''}"><div class="vb-meta">${V.party==='owner'?'Owner':'Tenant'} · Flat ${esc(V.house)} · page ${pg}/${n}</div>
+      <h3 class="vb-h">${esc(labelDocType(d.doc_type))}</h3>
+      <div class="vb-meta">${esc(d.file_name)}<br>Uploaded ${d.uploaded_at?esc(istDate(parseTs(d.uploaded_at))):'—'}${d.uploaded_by?' · by resident':''}</div>
+      <div>${isV?`<span class="vb-stamp">✔ ADMIN VERIFIED</span><div class="vb-meta" style="margin-top:6px;">${d.verified_at?esc(fmtIST(d.verified_at)):''}${d.verified_by?' · '+esc(d.verified_by):''}</div>`:'<span class="vb-stamp pend">⏳ AWAITING VERIFICATION</span>'}</div>
+      <div style="margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-sm" onclick="downloadDoc(${num(d.id)})">⬇ Download</button><button class="btn btn-sm" onclick="vaultGo(0)">📖 Contents</button></div></div>
+    <div class="vb-right ${dir>0?'flip-next':''}"><div class="vb-prev" id="vbPrev"><span class="vb-meta">Opening page…</span></div></div>`;
+  try{
+    let f = V.urls[d.id];
+    if(!f){ const x = await fetchDocFile(d.id); if(!x) throw new Error('no access'); f = V.urls[d.id] = {url:URL.createObjectURL(b64ToBlob(x.b64,x.mime)), mime:x.mime}; }
+    if(VAULT!==V || V.page!==pg) return;
+    const box = byId('vbPrev'); if(!box) return;
+    box.innerHTML = (/^image\//.test(f.mime) ? `<img src="${f.url}" alt="">` : f.mime==='application/pdf' ? `<iframe src="${f.url}" title="Document"></iframe>` : '<span class="vb-meta">Preview not available for this file type — use Download.</span>') + (isV ? sealBigHTML(d) : '');
+  }catch(e){ const box = byId('vbPrev'); if(box) box.innerHTML = '<span class="vb-meta">Could not open this document.</span>'; }
+}
+function closeVault(){
+  Object.values((VAULT&&VAULT.urls)||{}).forEach(f=>{ try{ URL.revokeObjectURL(f.url); }catch(e){} });
+  VAULT = {};
+  const o = byId('vaultOverlay'); if(o){ o.style.display = 'none'; byId('vaultShell').innerHTML = ''; }
+}
+
+/* ---- 4) Change photo (owner + tenant) for signed-in members ---- */
+async function savePersonPhoto(houseNo, who, file){
+  if(!canEditPhoto(houseNo)){ alert('You do not have permission to change this photo.'); return; }
+  try{
+    const f = await prepareUploadFile(file);
+    if(!/^image\//.test(f.mime)) throw new Error('Please choose a photo (JPG or PNG).');
+    const docType = who==='owner' ? 'owner_photo' : 'tenant_photo';
+    await turso([
+      {sql:'DELETE FROM documents WHERE house_no=? AND doc_type=?', args:[arg(houseNo),arg(docType)]},
+      {sql:`INSERT INTO documents (house_no,doc_type,file_name,file_data,uploaded_at) VALUES (?,?,?,?,?)`, args:[arg(houseNo),arg(docType),arg(f.name),arg(f.b64+'|'+f.mime),arg(new Date().toISOString())]}
+    ]);
+    await loadAll(); renderDirectory(); if(isResident()) renderMyFlat();
+    toast('✓ '+(who==='owner'?'Owner':'Tenant')+' photo updated');
+  }catch(e){ alert(e.message || 'Could not save the photo.'); }
+}
+function changePhoto(houseNo, who){
+  if(!canEditPhoto(houseNo)){ alert('You do not have permission to change this photo.'); return; }
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = ()=>{ if(inp.files.length) savePersonPhoto(houseNo, who, inp.files[0]); };
+  inp.click();
+}
+function photosSectionHTML(a,f,h,occupied){
+  const person = (who,label,name,on)=>`<div class="res-card pad" style="flex:1 1 230px;display:flex;gap:14px;align-items:center;"><div class="photo-lg">${avatarHTML(h,who,name)}</div>
+    <div><div class="section-label">${label}</div><div style="font-size:.88rem;margin:3px 0 8px;">${esc(name||'—')}</div>
+    ${on?`<button class="btn btn-sm btn-primary" onclick="changePhoto('${esc(h)}','${who}')">📷 Change photo</button>`:'<span style="font-size:.76rem;color:var(--cream-dim);">No tenant on record</span>'}</div></div>`;
+  return `<div class="res-section"><h3>Photos</h3><div class="res-note">Update the owner and tenant photos shown on your flat's card — take a new picture or pick one from your gallery.</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">${person('owner','Owner',f.owner_name,true)}${person('tenant','Tenant',occupied?f.tenant_name:'',occupied)}</div>
+    ${a.party==='owner'?`<div style="margin-top:12px;"><button class="btn btn-sm" onclick="openFlatDrawer('${esc(h)}')">Open full flat details</button></div>`:''}</div>`;
+}
+
+/* ---- 5) Car-start admin sign-in ---- */
+function carStartHTML(){
+  return `<div class="car-dash"><button type="button" class="engine-btn" id="engineBtn" onclick="startEngine()" aria-pressed="false"><span>ENGINE<br>START<br>STOP</span></button>
+    <div class="car-hint" id="carHint">Enter your login, press the engine button, then slide the car all the way to the gate to unlock.</div></div>
+    <div class="slide car-slide locked" id="slideAdmin" data-fn="doLogin" data-label="Slide the car to unlock" role="slider" aria-label="Slide the car to unlock admin sign-in" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><div class="slide-fill"></div><div class="slide-label">Slide the car to unlock</div><div class="slide-knob"><span class="car-ico">🚗</span></div><div class="gate">🔒</div></div>`;
+}
+function startEngine(){
+  const b = byId('engineBtn'), s = byId('slideAdmin'), h = byId('carHint'), er = byId('loginErr'); if(!b || !s) return;
+  if(!s.classList.contains('locked')){ s.focus(); return; }
+  const u = byId('loginUser').value.trim(), p = byId('loginPass').value;
+  if(!u || !p){ if(er) er.textContent = 'Enter username and password, then start the engine.'; return; }
+  if(er) er.textContent = '';
+  b.classList.add('on'); b.setAttribute('aria-pressed','true'); s.classList.remove('locked'); s.classList.add('on');
+  if(h) h.textContent = 'Engine running — slide the car to the gate to unlock.';
+  try{ if(navigator.vibrate) navigator.vibrate([40,30,40]); }catch(e){}
+}
+
+/* ---- 6) Edit bills and payments after adding ---- */
+function openBillEdit(kind,id){
+  const arr = {water:WATER, maintenance:MAINT, parking:PARK}[kind], b = arr.find(x=>String(x.id)===String(id)); if(!b) return;
+  const t = BILL_META[kind].title;
+  const html = billDrawerHTML(kind,b.house_no,b.month).replace('Record '+t,'Edit '+t).replace('Applies to one flat, one month','Change and save — the existing record is updated')
+    .replace('<input type="hidden" id="billKind"', `<input type="hidden" id="billEditId" value="${esc(b.id)}"><input type="hidden" id="billKind"`);
+  openDrawer(html);
+  byId('bAmount').value = b.amount ?? ''; const bw = byId('bBwssb'); if(bw) bw.value = b.bwssb_amount || '';
+  byId('bStatus').value = b.status || 'unpaid';
+  byId('bHouse').disabled = true; byId('bMonth').disabled = true;
+}
+let PAYEDIT = null;
+function payActionsHTML(kind,r){
+  return r.db
+    ? `<button class="icon-btn" onclick="openPayEdit('${kind}','d',${r.id})">Edit</button><button class="icon-btn del" title="Remove this payment" onclick="deletePayRow('${kind}',${r.id})">✕</button>`
+    : `<button class="icon-btn" onclick="openPayEdit('${kind}','b',${r.bi})">Edit</button><button class="icon-btn del" title="Remove this payment" onclick="hidePayBuiltin('${kind}',${r.bi})">✕</button>`;
+}
+function openPayEdit(kind,src,key){
+  if(!isAdmin()) return;
+  let r = null;
+  if(src==='d') r = (PAY_DB[kind]||[]).find(x=>x.id===num(key));
+  else if(src==='b') r = payBuiltin(kind).find(x=>x.bi===num(key));
+  PAYEDIT = {kind, src:src||'', key:key===undefined?-1:num(key)};
+  const v = r || {period:istMonth(), bill:'', iso:istDate(), flat:'', name:'', amt:''};
+  const c = PR_KINDS[kind], flats = [...FLATS].sort((a,b)=>a.house_no.localeCompare(b.house_no));
+  openDrawer(`<div class="drawer-head"><div><h2>${r?'Edit':'Add'} payment</h2><div class="sub">${c.label} · ${r?'changes are saved to the report':'recorded manually'}</div></div><button class="close-x" onclick="closeDrawer()">&times;</button></div>
+  <div class="drawer-body">
+    <div class="row2"><div class="field-group"><label>Report month</label><input id="pePeriod" type="month" value="${esc(v.period)}"></div><div class="field-group"><label>Payment date</label><input id="peDate" type="date" value="${esc(v.iso)}"></div></div>
+    <div class="row2"><div class="field-group"><label>Flat</label><select id="peFlat" onchange="peFlatChanged()"><option value="">Choose flat…</option>${flats.map(f=>`<option value="${esc(f.house_no)}" ${f.house_no===v.flat?'selected':''}>${esc(f.house_no)} — ${esc(f.owner_name)}</option>`).join('')}${v.flat && !flats.some(f=>f.house_no===v.flat)?`<option value="${esc(v.flat)}" selected>${esc(v.flat)}</option>`:''}</select></div>
+      <div class="field-group"><label>Bill no. (optional)</label><input id="peBill" value="${esc(v.bill)}"></div></div>
+    <div class="field-group"><label>Name</label><input id="peName" value="${esc(v.name)}"></div>
+    <div class="field-group"><label>Amount (₹)</label><input id="peAmt" type="number" min="0" step="1" value="${esc(v.amt)}"></div>
+    <button class="btn btn-primary" onclick="savePayEdit()">Save</button><div class="err" id="peErr"></div>
+  </div>`);
+}
+function peFlatChanged(){ const f = FLATS.find(x=>x.house_no===byId('peFlat').value), n = byId('peName'); if(f && !n.value.trim()) n.value = f.owner_name||''; }
+async function savePayEdit(){
+  if(!isAdmin() || !PAYEDIT) return;
+  const S = PAYEDIT, c = PR_KINDS[S.kind], er = byId('peErr'); er.textContent = '';
+  const iso = byId('peDate').value, flat = byId('peFlat').value, name = byId('peName').value.trim(), bill = byId('peBill').value.trim(), amt = parseFloat(byId('peAmt').value);
+  const period = byId('pePeriod').value || (iso||'').slice(0,7);
+  if(!iso){ er.textContent = 'Choose the payment date.'; return; }
+  if(!flat){ er.textContent = 'Choose the flat.'; return; }
+  if(!(amt>=0) || isNaN(amt)){ er.textContent = 'Enter a valid amount.'; return; }
+  const fl = v=>({type:'float', value:Number(v)}), now = new Date().toISOString(), stmts = [];
+  if(S.src==='d'){
+    stmts.push({sql:`UPDATE ${c.table} SET period=?,bill_no=?,pay_date=?,flat=?,name=?,amount=? WHERE id=?`, args:[arg(period),arg(bill),arg(iso),arg(flat),arg(name),fl(amt),arg(S.key)]});
+  } else {
+    if(S.src==='b'){
+      const set = new Set(PAY_HIDDEN[S.kind]); set.add(S.key);
+      stmts.push({sql:'INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', args:[arg('pay_hidden_'+S.kind),arg(JSON.stringify([...set]))]});
+    }
+    stmts.push({sql:`INSERT INTO ${c.table} (period,bill_no,pay_date,flat,name,amount,source,added_at) VALUES (?,?,?,?,?,?,?,?)`, args:[arg(period),arg(bill),arg(iso),arg(flat),arg(name),fl(amt),arg(S.src==='b'?'edited':'manual entry'),arg(now)]});
+  }
+  try{
+    await tursoAtomic(stmts); closeDrawer(); await loadAll(); c.render();
+    toast(S.src ? '✓ Payment updated' : '✓ Payment added');
+  }catch(e){ er.textContent = 'Could not save: '+e.message; }
+}
+async function hidePayBuiltin(kind,bi){
+  if(!isAdmin() || !confirm('Remove this payment from the report?')) return;
+  const set = new Set(PAY_HIDDEN[kind]); set.add(num(bi));
+  try{
+    await tursoStrict([{sql:'INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', args:[arg('pay_hidden_'+kind),arg(JSON.stringify([...set]))]}]);
+    await loadAll(); PR_KINDS[kind].render();
+  }catch(e){ alert('Could not remove: '+e.message); }
+}
+async function loadPayHidden(){
+  try{
+    const rows = toRows((await tursoStrict([{sql:"SELECT key,value FROM app_settings WHERE key IN ('pay_hidden_water','pay_hidden_maintenance')"}]))[0]);
+    PAY_HIDDEN.water = new Set(); PAY_HIDDEN.maintenance = new Set();
+    rows.forEach(r=>{ const k = r.key.replace('pay_hidden_',''); try{ (JSON.parse(r.value||'[]')).forEach(i=>PAY_HIDDEN[k].add(i)); }catch(e){} });
+  }catch(e){}
+}
+
+/* ---- Admin sections: left index (mouse + arrow keys) ---- */
+const ADMIN_SECTIONS = [['documents','📄','Documents'],['users','👥','Users & Access'],['logs','🕵️','Access Logs'],['settings','🏛️','Association'],['backups','💾','Backups']];
+const ADMIN_VIEWS = ADMIN_SECTIONS.map(s=>s[0]);
+function updateAdminIndex(v){
+  const idx = byId('adminIndex'), main = document.querySelector('main'); if(!idx || !main) return;
+  const show = isAdmin() && ADMIN_VIEWS.includes(v);
+  main.classList.toggle('has-index', show); idx.style.display = show ? 'flex' : 'none';
+  if(!show) return;
+  if(!idx.dataset.built){
+    idx.dataset.built = '1';
+    idx.innerHTML = '<div class="ai-title">Admin sections</div>' + ADMIN_SECTIONS.map(([k,i,l])=>`<button type="button" class="ai-item" role="option" data-view="${k}" onclick="adminIndexGo('${k}')"><span>${i}</span><span>${l}</span></button>`).join('') + '<div class="ai-hint">Click a section, or use the ↑ ↓ keys.<br>Alt + ↑ / ↓ works from anywhere.</div>';
+  }
+  const hid = new Set((ORG.hiddenTabs||'').split(',').filter(Boolean));
+  idx.querySelectorAll('.ai-item').forEach(b=>{ const k = b.dataset.view, on = k===v; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); b.tabIndex = on?0:-1; b.hidden = hid.has(k) && k!=='settings'; });
+}
+function adminIndexGo(v){ switchView(v); const b = byId('adminIndex').querySelector('[data-view="'+v+'"]'); if(b) b.focus(); }
+function adminIndexKey(e){
+  if(e.altKey || e.ctrlKey || e.metaKey) return;
+  const items = [...byId('adminIndex').querySelectorAll('.ai-item')].filter(b=>!b.hidden);
+  const i = items.indexOf(document.activeElement); if(i<0) return;
+  let n;
+  if(e.key==='ArrowDown' || e.key==='ArrowRight') n = (i+1)%items.length;
+  else if(e.key==='ArrowUp' || e.key==='ArrowLeft') n = (i-1+items.length)%items.length;
+  else if(e.key==='Home') n = 0; else if(e.key==='End') n = items.length-1; else return;
+  e.preventDefault(); adminIndexGo(items[n].dataset.view);
+}
+function currentViewKey(){ const a = document.querySelector('.view.active'); return a ? a.id.replace('view-','') : ''; }
+function globalKeys(e){
+  const vo = byId('vaultOverlay');
+  if(vo && vo.style.display==='flex'){
+    if(e.key==='Escape'){ closeVault(); return; }
+    if(VAULT.unlocked && !/INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName)||'')){
+      if(e.key==='ArrowRight'){ e.preventDefault(); vaultTurn(1); } else if(e.key==='ArrowLeft'){ e.preventDefault(); vaultTurn(-1); }
+    }
+    return;
+  }
+  if(e.key==='Escape') closeDocPreview();
+  if(e.altKey && (e.key==='ArrowDown' || e.key==='ArrowUp') && isAdmin()){
+    e.preventDefault();
+    const cur = ADMIN_VIEWS.indexOf(currentViewKey()), step = e.key==='ArrowDown' ? 1 : -1;
+    adminIndexGo(ADMIN_VIEWS[cur<0 ? 0 : (cur+step+ADMIN_VIEWS.length)%ADMIN_VIEWS.length]);
+  }
+}
+
+
 /* ================= DRAWER HELPERS ================= */
 function openDrawer(html){ document.getElementById('drawer').innerHTML = html; document.getElementById('drawer').classList.add('show'); document.getElementById('overlay').classList.add('show'); initSlides(); }
 function closeDrawer(){ document.getElementById('drawer').classList.remove('show'); document.getElementById('overlay').classList.remove('show'); }
@@ -3265,7 +3634,7 @@ async function boot(){
   if(isResident()) switchView('myflat'); else switchView('dashboard');
   startNoticeAutoRefresh();
   startApprovalPolling();
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDocPreview(); });
+  document.addEventListener('keydown',globalKeys); byId('adminIndex').addEventListener('keydown',adminIndexKey);
   maybeAutoBackup();
 }
 window.addEventListener('DOMContentLoaded', async ()=>{
