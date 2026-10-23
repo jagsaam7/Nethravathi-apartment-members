@@ -422,6 +422,12 @@ main.has-index>.view{grid-column:2;min-width:0;}
 .ai-hint{font-size:.66rem;color:var(--cream-dim);padding:10px 8px 2px;line-height:1.5;}
 @media(max-width:820px){main.has-index{display:block;}.admin-index{position:static;flex-direction:row;overflow-x:auto;margin-bottom:14px;}.ai-hint{display:none;}.ai-item{width:auto;white-space:nowrap;}}
 
+
+body.refreshing::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:3000;background:linear-gradient(90deg,transparent,var(--brass),transparent);background-size:40% 100%;background-repeat:no-repeat;animation:refbar 1s linear infinite;}
+@keyframes refbar{from{background-position:-40% 0}to{background-position:140% 0}}
+.mq-docs{display:inline-flex;gap:3px;margin-left:4px;font-size:.78rem;vertical-align:middle;}
+.mq-docs i{font-style:normal;opacity:.28;filter:grayscale(1);} .mq-docs i.on{opacity:1;filter:none;}
+.sig-pad{width:100%;max-width:420px;height:150px;background:#fff;border-radius:8px;touch-action:none;cursor:crosshair;border:2px dashed var(--brass);display:block;}
 </style>
 </head>
 <body>
@@ -567,6 +573,7 @@ main.has-index>.view{grid-column:2;min-width:0;}
       <div class="right-actions"><span style="color:var(--cream-dim);font-size:0.85rem;">Possession certificates, owner ID, tenant rental agreements</span></div>
       <div class="right-actions"><button class="btn btn-primary" id="docAddBtn" onclick="openDocDrawer()" style="display:none;">+ Upload document</button></div>
     </div>
+    <div id="vaultStatus" class="res-note" style="display:none;margin:0 0 10px;"></div>
     <div class="block-tabs" id="docBlockTabs"></div>
     <div class="ledger-wrap"><table class="ledger">
       <thead><tr><th>House</th><th>Type</th><th>File</th><th>Uploaded</th><th>Status</th><th></th></tr></thead>
@@ -753,8 +760,9 @@ async function ensureSchema(){
   try{ await turso([{sql:`CREATE TABLE IF NOT EXISTS resident_accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, mobile TEXT, house_no TEXT, party TEXT, name TEXT, password_hash TEXT, status TEXT DEFAULT 'pending', created_at TEXT, last_login TEXT, UNIQUE(mobile, house_no))`}]); }catch(e){ console.warn('resident_accounts setup failed', e); }
   try{ await turso([{sql:`CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)`}]); }catch(e){ console.warn('app_settings setup failed', e); }
   try{ await turso([{sql:`CREATE TABLE IF NOT EXISTS vault_pins (house_no TEXT, party TEXT, pin_hash TEXT, set_at TEXT, PRIMARY KEY(house_no,party))`}]); }catch(e){ console.warn('vault_pins setup failed', e); }
+  try{ await turso([{sql:`CREATE TABLE IF NOT EXISTS vault_keys (holder TEXT PRIMARY KEY, pub TEXT, enc_priv TEXT, salt TEXT, created_at TEXT)`},{sql:`CREATE TABLE IF NOT EXISTS doc_keys (doc_id INTEGER, holder TEXT, wrapped TEXT, PRIMARY KEY(doc_id,holder))`}]); }catch(e){ console.warn('vault key tables setup failed', e); }
   // Document verification, point-in-time backups and per-flat change history
-  for(const col of ['verified INTEGER DEFAULT 0','verified_by TEXT','verified_at TEXT']){ try{ await turso([{sql:`ALTER TABLE documents ADD COLUMN ${col}`}]); }catch(e){} }
+  for(const col of ['verified INTEGER DEFAULT 0','verified_by TEXT','verified_at TEXT','signed_by TEXT','signed_at TEXT','signature TEXT','signed_hash TEXT']){ try{ await turso([{sql:`ALTER TABLE documents ADD COLUMN ${col}`}]); }catch(e){} }
   try{ await turso([{sql:BACKUPS_DDL},{sql:FLAT_HISTORY_DDL}]); }catch(e){ console.warn('backup tables setup failed', e); }
   // Rolling 7-day retention on the access log — anything older is purged automatically
   try{ await turso([{sql:`DELETE FROM access_logs WHERE viewed_at < datetime('now','-7 days')`}]); }catch(e){}
@@ -881,7 +889,7 @@ async function doLogin(){
     const hash = await sha256(p);
     const rows = toRows((await turso([{sql:'SELECT username,name,role FROM admin_users WHERE username=? AND password_hash=?', args:[arg(u),arg(hash)]}]))[0]);
     if(rows.length===0){ errEl.textContent='Incorrect username or password.'; return; }
-    sessionStorage.removeItem(RES_KEY); RES_ACCOUNTS=[]; RES_HASH='';
+    sessionStorage.removeItem(RES_KEY); RES_ACCOUNTS=[]; RES_HASH=''; vkClear();
     CURRENT_USER = rows[0];
     SEEN_PENDING = new Set(); sessionStorage.removeItem('nr_ban_dismissed');
     sessionStorage.setItem('nr_user', JSON.stringify(CURRENT_USER));
@@ -893,6 +901,7 @@ async function doLogin(){
   }catch(e){ errEl.textContent='Could not connect: '+e.message; }
 }
 async function logout(){
+  vkClear();
   sessionStorage.removeItem('nr_user'); sessionStorage.removeItem(RES_KEY);
   CURRENT_USER = null; RES_ACCOUNTS = []; RES_HASH = ''; RES_ACTIVE = 0; SEEN_PENDING = new Set(); RESIDENTS = [];
   try{ await loadAll(); }catch(e){}
@@ -908,16 +917,35 @@ let TRUST = {}, AFTER_LOGIN = null;
 const BLOCKS = ['A','B','C','D','E','F','G','H'];
 let activeBlock = {directory:'',water:'',parking:'',maintenance:'',documents:''};
 
+function scrollToTabs(){
+  const el = document.getElementById('mainTabs'); if(!el) return;
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const y = el.getBoundingClientRect().top + window.pageYOffset - 8;
+  if(Math.abs(y - window.pageYOffset) < 4) return;
+  window.scrollTo({top:Math.max(0,y), behavior: reduce ? 'auto' : 'smooth'});
+}
+let LAST_LOAD = 0, REFRESHING = false;
+async function refreshViewData(v){
+  if(REFRESHING || Date.now()-LAST_LOAD<4000) return;
+  REFRESHING = true; document.body.classList.add('refreshing');
+  try{
+    await loadAll();
+    const act = document.activeElement, typing = act && /^(INPUT|TEXTAREA|SELECT)$/.test(act.tagName) && act.closest('.view');
+    if(!typing && currentViewKey()===v) switchView(v, true);
+  }catch(e){ console.warn('refresh failed', e); }
+  finally{ REFRESHING = false; document.body.classList.remove('refreshing'); }
+}
 async function loadAll(){
+  LAST_LOAD = Date.now();
   // Documents are never bulk-loaded for the public: staff get all, a resident gets only the files
   // their own account(s) may see, guests get nothing.
-  const DOC_COLS = 'id,house_no,doc_type,party,file_name,uploaded_at,uploaded_by,verified,verified_by,verified_at';
+  const DOC_COLS = 'id,house_no,doc_type,party,file_name,uploaded_at,uploaded_by,verified,verified_by,verified_at,signed_by,signed_at';
   let docStmt;
   if(isAdmin()){
     docStmt = {sql:`SELECT ${DOC_COLS} FROM documents WHERE doc_type NOT IN ('owner_photo','tenant_photo') ORDER BY uploaded_at DESC`};
   } else if(isResident() && RES_ACCOUNTS.length){
-    const conds = RES_ACCOUNTS.map(()=>"(house_no=? AND (party=? OR doc_type='tenant_agreement'))").join(' OR ');
-    const args = []; RES_ACCOUNTS.forEach(a=>{ args.push(arg(a.house_no), arg(a.party)); });
+    const conds = RES_ACCOUNTS.map(()=>"(house_no=? AND (party=? OR doc_type='tenant_agreement' OR (?='owner' AND party='tenant')))").join(' OR ');
+    const args = []; RES_ACCOUNTS.forEach(a=>{ args.push(arg(a.house_no), arg(a.party), arg(a.party)); });
     docStmt = {sql:`SELECT ${DOC_COLS} FROM documents WHERE doc_type NOT IN ('owner_photo','tenant_photo') AND (${conds}) ORDER BY uploaded_at DESC`, args};
   } else {
     docStmt = {sql:`SELECT ${DOC_COLS} FROM documents WHERE 1=0`};
@@ -982,7 +1010,7 @@ function applyRoleUI(){
 }
 
 /* ================= NAV ================= */
-function switchView(v){
+function switchView(v,noRefresh){
   if(v!=='settings') applyLook(ORG);
   { const hid=hideConfiguredTabs(ORG); if(hid.has(v) && v!=='settings'){ const b=[...document.querySelectorAll('#mainTabs button')].find(b=>b.style.display!=='none'&&!hid.has(b.dataset.view)); v=b?b.dataset.view:'settings'; } }
   // Guard views by role even if a tab is reached some other way
@@ -993,6 +1021,7 @@ function switchView(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   ({dashboard:renderDashboard,backups:renderBackups,settings:renderSettings,myflat:renderMyFlat,directory:renderDirectory,notice:renderNoticeBoard,water:renderWater,parking:renderParking,maintenance:renderMaintenance,documents:renderDocuments,users:renderUsers,logs:renderAccessLogs})[v](); updateAdminIndex(v);
+  if(!noRefresh){ scrollToTabs(); refreshViewData(v); }
 }
 
 /* ================= DIRECTORY ================= */
@@ -1185,26 +1214,38 @@ function renderDirectory(){
 
 
 /* ================= DIRECTORY FILTERS (dashboard click-through) ================= */
-let DIR_FILTER = {owners:true,tenants:true,cars:false,twow:false,multi:false};
-function dirFilterPass(f){ const F = DIR_FILTER, o = occOf(f); return (o==='owner'?F.owners:F.tenants) && (!F.cars||num(f.num_cars)>0) && (!F.twow||num(f.num_2w)>0) && (!F.multi||num(f.num_members)>1); }
-function dirFilterActive(){ const F = DIR_FILTER; return !(F.owners&&F.tenants&&!F.cars&&!F.twow&&!F.multi); }
+let DIR_FILTER = {owners:true,tenants:true,cars:false,twow:false,multi:false,doc:''};
+function dirFilterPass(f){ const F = DIR_FILTER, o = occOf(f); return (o==='owner'?F.owners:F.tenants) && docFilterPass(f) && (!F.cars||num(f.num_cars)>0) && (!F.twow||num(f.num_2w)>0) && (!F.multi||num(f.num_members)>1); }
+function dirFilterActive(){ const F = DIR_FILTER; return !(F.owners&&F.tenants&&!F.cars&&!F.twow&&!F.multi&&!F.doc); }
 function toggleDirFilter(k){ DIR_FILTER[k] = !DIR_FILTER[k]; renderDirectory(); }
-function clearDirFilters(){ DIR_FILTER = {owners:true,tenants:true,cars:false,twow:false,multi:false}; renderDirectory(); }
+function clearDirFilters(){ DIR_FILTER = {owners:true,tenants:true,cars:false,twow:false,multi:false,doc:''}; renderDirectory(); }
 function dashFilter(act){
-  DIR_FILTER = {owners:true,tenants:true,cars:false,twow:false,multi:false};
+  DIR_FILTER = {owners:true,tenants:true,cars:false,twow:false,multi:false,doc:''};
   if(act==='owner') DIR_FILTER.tenants = false;
   if(act==='tenant') DIR_FILTER.owners = false;
   if(act==='cars') DIR_FILTER.cars = true;
   if(act==='twow') DIR_FILTER.twow = true;
   if(act==='multi') DIR_FILTER.multi = true;
+  if(['trusted','submitted','awaiting','none'].includes(act)) DIR_FILTER.doc = act;
   activeBlock.directory = ''; const q = byId('dirSearch'); if(q) q.value = '';
   switchView('directory');
+}
+/* Owner-document status per flat, from the public per-flat tally (counts only — no files are exposed) */
+function docStatusOf(f){ const x = TRUST[f.house_no+':owner'], n = x?x.n:0; return n===0 ? 'none' : (x.v>=n ? 'trusted' : 'awaiting'); }
+function docFilterPass(f){ const k = DIR_FILTER.doc; if(!k) return true; const s = docStatusOf(f); return k==='submitted' ? s!=='none' : s===k; }
+function docCounts(){ const c = {trusted:0,awaiting:0,none:0,submitted:0}; FLATS.filter(f=>num(f.active)!==0).forEach(f=>{ const s = docStatusOf(f); c[s]++; if(s!=='none') c.submitted++; }); return c; }
+function setDocFilter(k){ DIR_FILTER.doc = DIR_FILTER.doc===k ? '' : k; renderDirectory(); }
+function docFilterChips(){
+  const c = docCounts(), F = DIR_FILTER;
+  const ch = (k,label,n)=>`<span class="fchip ${F.doc===k?'on':''}" style="cursor:pointer;" onclick="setDocFilter('${k}')">${label} <b>${n}</b></span>`;
+  return ch('trusted','🛡️ Trusted (all verified)',c.trusted) + ch('submitted','📄 Submitted',c.submitted) + ch('awaiting','⏳ Awaiting verification',c.awaiting) + ch('none','❌ Not submitted',c.none);
 }
 function renderDirFilters(){
   const F = DIR_FILTER, el = byId('dirFilters'); if(!el) return;
   const chip = (k,label)=>`<label class="fchip ${F[k]?'on':''}"><input type="checkbox" ${F[k]?'checked':''} onchange="toggleDirFilter('${k}')"> ${label}</label>`;
   el.innerHTML = chip('owners','🏠 Owners') + chip('tenants','🔑 Tenants') + '<span style="width:1px;height:20px;background:var(--line);margin:0 4px;"></span>' +
     chip('cars','🚗 With cars') + chip('twow','🛵 With 2-wheelers') + chip('multi','👥 More than 1 member') +
+    '<span style="width:1px;height:20px;background:var(--line);margin:0 4px;"></span><span style="font-size:.76rem;color:var(--cream-dim);">Owner documents:</span>' + docFilterChips() +
     (dirFilterActive() ? '<button class="btn btn-sm" onclick="clearDirFilters()">Clear filters</button>' : '');
 }
 /* An approved owner account may see (and add photos to) its own flat, the same way the admin does */
@@ -1430,7 +1471,8 @@ const DOC_TENANT_TYPES = ['tenant_agreement','tenant_id','police_verification'];
 function partyForType(type, fallback){ return DOC_OWNER_TYPES.includes(type)?'owner':DOC_TENANT_TYPES.includes(type)?'tenant':fallback; }
 const DOC_EMOJI = {possession_certificate:'🏠',sale_deed:'📜',khata:'🧾',owner_id:'🪪',tenant_agreement:'📝',tenant_id:'🪪',police_verification:'👮',vehicle_rc:'🚗',other:'📄'};
 function sealTip(d){ return 'Verified by admin'+(d.verified_by?' ('+d.verified_by+')':'')+(d.verified_at?' on '+fmtIST(d.verified_at):''); }
-function statusPillHTML(d){
+function statusPillHTML(d){ return statusPillBase(d) + (d.signed_at ? `<span class="status-pill ok" style="margin-left:4px;" title="Digitally signed by ${esc(d.signed_by||'owner')} on ${esc(fmtIST(d.signed_at))}">✍ Signed</span>` : ''); }
+function statusPillBase(d){
   if(num(d.verified)===1) return `<span class="status-pill ok" title="${esc(sealTip(d))}">${DOC_EMOJI[d.doc_type]||'📄'} ✅ Verified</span><span class="admin-seal" title="${esc(sealTip(d))}">✔</span>`;
   return `<span class="status-pill up" title="Uploaded successfully — waiting for admin verification">✓ Uploaded</span>`;
 }
@@ -1468,8 +1510,7 @@ async function uploadPartyDoc(houseNo, party){
   const reader = new FileReader();
   reader.onload = async () => {
     const base64 = reader.result.split(',')[1];
-    await turso([{sql:`INSERT INTO documents (house_no,doc_type,party,file_name,file_data,uploaded_at) VALUES (?,?,?,?,?,?)`,
-      args:[arg(houseNo),arg(type),arg(party),arg(file.name),arg(base64+'|'+file.type),arg(new Date().toISOString())]}]);
+    try{ await storeDoc({house:houseNo,type,party,name:file.name,b64:base64,mime:file.type}); }catch(err){ alert(err.message||'Upload failed.'); return; }
     await loadAll();
     openFlatDrawer(houseNo);
     toast('✓ Document uploaded successfully');
@@ -2154,6 +2195,7 @@ async function deleteBill(kind,id){
 
 /* ================= DOCUMENTS ================= */
 function renderDocuments(){
+  { const vs = byId('vaultStatus'); if(vs){ vs.style.display = isAdmin() ? 'block' : 'none'; if(isAdmin()) refreshVaultStatus(); } }
   document.getElementById('docBlockTabs').innerHTML = blockTabsHTML('documents');
   const block = activeBlock.documents;
   let rows = DOCS;
@@ -2189,7 +2231,7 @@ async function saveDoc(){
   reader.onload = async () => {
     const base64 = reader.result.split(',')[1];
     const party = partyForType(type,'other');
-    await turso([{sql:`INSERT INTO documents (house_no,doc_type,party,file_name,file_data,uploaded_at) VALUES (?,?,?,?,?,?)`, args:[arg(house),arg(type),arg(party),arg(file.name),arg(base64+'|'+file.type),arg(new Date().toISOString())]}]);
+    try{ await storeDoc({house,type,party,name:file.name,b64:base64,mime:file.type}); }catch(err){ alert(err.message||'Upload failed.'); return; }
     await loadAll();
     if(returnHouse){ openFlatDrawer(returnHouse); } else { closeDrawer(); renderDocuments(); }
     toast('✓ Document uploaded successfully');
@@ -2202,12 +2244,16 @@ function canAccessDoc(d){ return isAdmin() || (isResident() && residentCanSee(d)
 async function fetchDocFile(id){
   const d = DOCS.find(x=>String(x.id)===String(id));
   if(!d || !canAccessDoc(d)){ alert('You do not have access to this document.'); return null; }
-  const res = toRows((await turso([{sql:'SELECT file_name,file_data FROM documents WHERE id=? AND house_no=?', args:[arg(num(id)),arg(d.house_no)]}]))[0]);
+  const res = toRows((await turso([{sql:'SELECT file_name,file_data,signature,signed_hash,signed_by,signed_at FROM documents WHERE id=? AND house_no=?', args:[arg(num(id)),arg(d.house_no)]}]))[0]);
   if(!res.length) return null;
-  const parts = String(res[0].file_data||'').split('|'); const name = res[0].file_name||'document';
+  const name = res[0].file_name||'document'; let parts, enc = false;
+  if(String(res[0].file_data||'').startsWith(ENC_TAG)){
+    try{ const x = await decryptDoc(id, res[0].file_data); parts = [x.b64, x.mime]; enc = true; }
+    catch(err){ alert(err && err.message ? (err.message==='vault locked' ? 'The vault is locked. Enter the Vault passphrase to read this document.' : err.message) : 'This document could not be unlocked.'); return null; }
+  } else parts = String(res[0].file_data||'').split('|');
   let mime = parts[1] || '';
   if(!mime || mime==='application/octet-stream') mime = /\.pdf$/i.test(name) ? 'application/pdf' : /\.(jpe?g)$/i.test(name) ? 'image/jpeg' : /\.png$/i.test(name) ? 'image/png' : /\.webp$/i.test(name) ? 'image/webp' : mime;
-  return {d, name, b64:parts[0], mime};
+  return {d, name, b64:parts[0], mime, enc, sig:res[0].signature, shash:res[0].signed_hash, sby:res[0].signed_by, sat:res[0].signed_at};
 }
 function b64ToBlob(b64, mime){ const bin = atob(b64), u = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i); return new Blob([u],{type:mime}); }
 async function downloadDoc(id){
@@ -2218,11 +2264,16 @@ async function downloadDoc(id){
 }
 async function previewDoc(id){
   const f = await fetchDocFile(id); if(!f) return;
+  let sigHTML = '';
+  if(f.sat){
+    let okSig = false; try{ okSig = (await sha256B64(f.b64))===f.shash; }catch(e){}
+    sigHTML = `<div style="flex-basis:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;">✍ Digitally signed by <b>${esc(f.sby||'owner')}</b> · ${esc(fmtIST(f.sat))} ${f.sig?`<img src="${esc(f.sig)}" alt="Signature" style="height:34px;background:#fff;border-radius:4px;padding:2px 6px;">`:''} ${okSig?'<span class="status-pill ok">✔ Signature valid — file unchanged since signing</span>':'<span class="status-pill pending">⚠ File differs from the version that was signed</span>'}</div>`;
+  }
   if(PREVIEW_URL){ URL.revokeObjectURL(PREVIEW_URL); PREVIEW_URL = null; }
   PREVIEW_URL = URL.createObjectURL(b64ToBlob(f.b64,f.mime));
   const isImg = /^image\//.test(f.mime), isPdf = f.mime==='application/pdf';
   byId('dpTitle').textContent = labelDocType(f.d.doc_type)+' — Flat '+f.d.house_no;
-  byId('dpMeta').innerHTML = `${esc(f.name)} ${statusPillHTML(f.d)}${f.d.uploaded_at?`<span>uploaded ${esc(fmtIST(f.d.uploaded_at))}</span>`:''}`;
+  byId('dpMeta').innerHTML = `${esc(f.name)} ${f.enc?'<span class="status-pill paid" title="Stored encrypted; decrypted only in your browser">🔒 Encrypted</span>':''} ${statusPillHTML(f.d)}${f.d.uploaded_at?`<span>uploaded ${esc(fmtIST(f.d.uploaded_at))}</span>`:''}${sigHTML}`;
   byId('dpActions').innerHTML = (isAdmin() ? verifyBtnHTML(f.d,'preview') : '') + `<a class="btn btn-sm" href="${PREVIEW_URL}" download="${esc(f.name)}">Download</a>${isPdf?`<a class="btn btn-sm" href="${PREVIEW_URL}" target="_blank" rel="noopener">Open in new tab</a>`:''}`;
   byId('dpBody').innerHTML = (num(f.d.verified)===1 ? sealBigHTML(f.d) : '') + (isImg ? `<img src="${PREVIEW_URL}" alt="Document preview">` : isPdf ? `<iframe src="${PREVIEW_URL}" title="Document preview"></iframe>` : `<div class="dp-none">A preview isn't available for this file type. Use Download.</div>`);
   byId('docPreview').style.display = 'flex';
@@ -2242,12 +2293,12 @@ async function setDocVerified(id, on, ctx){
 }
 async function deleteDoc(id){
   if(!confirm('Delete this document?')) return;
-  await turso([{sql:'DELETE FROM documents WHERE id=?', args:[arg(id)]}]);
+  await turso([{sql:'DELETE FROM documents WHERE id=?', args:[arg(id)]},{sql:'DELETE FROM doc_keys WHERE doc_id=?', args:[arg(num(id))]}]);
   await loadAll(); renderDocuments();
 }
 async function deleteDocInline(id, houseNo){
   if(!confirm('Delete this document?')) return;
-  await turso([{sql:'DELETE FROM documents WHERE id=?', args:[arg(id)]}]);
+  await turso([{sql:'DELETE FROM documents WHERE id=?', args:[arg(id)]},{sql:'DELETE FROM doc_keys WHERE doc_id=?', args:[arg(num(id))]}]);
   await loadAll(); openFlatDrawer(houseNo);
 }
 
@@ -2336,7 +2387,7 @@ const MAX_UPLOADS_PER_ACCOUNT = 12;
 async function resHash(mobile, password){ return sha256('nr-resident:'+normalizeDigits(mobile).slice(-10)+':'+password); }
 function resAcct(){ return RES_ACCOUNTS[RES_ACTIVE] || null; }
 function residentCanSee(d){
-  return RES_ACCOUNTS.some(a => a.house_no===d.house_no && (d.party===a.party || d.doc_type==='tenant_agreement'));
+  return RES_ACCOUNTS.some(a => a.house_no===d.house_no && (d.party===a.party || d.doc_type==='tenant_agreement' || (a.party==='owner' && d.party==='tenant')));
 }
 function applyResidentSession(rows, hash, active){
   RES_ACCOUNTS = rows; RES_HASH = hash; RES_ACTIVE = Math.max(0, Math.min(active||0, rows.length-1));
@@ -2370,6 +2421,7 @@ async function residentSignIn(){
       return;
     }
     applyResidentSession(approved, hash, 0);
+    await residentVaultInit(mobile, pass);
     await turso([{sql:'UPDATE resident_accounts SET last_login=? WHERE mobile=?', args:[arg(new Date().toISOString()),arg(mobile)]}]);
     closeDrawer();
     await loadAll();
@@ -2452,8 +2504,7 @@ async function uploadResidentDoc(){
   try{
     const f = await prepareUploadFile(input.files[0]);
     // house_no, party and uploader come from the signed-in account — never from anything typed on the page
-    await turso([{sql:'INSERT INTO documents (house_no,doc_type,party,file_name,file_data,uploaded_at,uploaded_by) VALUES (?,?,?,?,?,?,?)',
-      args:[arg(a.house_no),arg(type),arg(partyForType(type,a.party)),arg(f.name),arg(f.b64+'|'+f.mime),arg(new Date().toISOString()),arg(a.mobile)]}]);
+    await storeDoc({house:a.house_no,type,party:partyForType(type,a.party),name:f.name,b64:f.b64,mime:f.mime,uploadedBy:a.mobile});
     await loadAll(); renderMyFlat();
     const m2 = byId('rdMsg'); if(m2){ m2.className = 'msg-ok'; m2.textContent = '✓ Uploaded successfully — the admin will verify it. You will see “Verified” once done.'; }
     toast('✓ Document uploaded successfully');
@@ -2465,9 +2516,10 @@ async function uploadResidentDoc(){
 async function deleteResidentDoc(id){
   const a = resAcct(); const d = DOCS.find(x=>String(x.id)===String(id));
   if(!a || !d || d.uploaded_by!==a.mobile || d.house_no!==a.house_no){ alert('You can only remove files you uploaded yourself.'); return; }
+  if(d.signed_at){ alert('This document has been digitally signed and is locked.'); return; }
   if(num(d.verified)===1){ alert('This document has been verified by the admin and is locked. Ask the admin if it needs to be replaced.'); return; }
   if(!confirm('Remove this document?')) return;
-  await turso([{sql:'DELETE FROM documents WHERE id=? AND uploaded_by=? AND house_no=? AND COALESCE(verified,0)=0', args:[arg(num(id)),arg(a.mobile),arg(a.house_no)]}]);
+  await turso([{sql:'DELETE FROM documents WHERE id=? AND uploaded_by=? AND house_no=? AND COALESCE(verified,0)=0 AND signed_at IS NULL', args:[arg(num(id)),arg(a.mobile),arg(a.house_no)]}]);
   await loadAll(); renderMyFlat();
 }
 async function changeResidentPassword(){
@@ -2481,6 +2533,7 @@ async function changeResidentPassword(){
   const newHash = await resHash(a.mobile, n1);
   await turso([{sql:'UPDATE resident_accounts SET password_hash=? WHERE mobile=? AND password_hash=?', args:[arg(newHash),arg(a.mobile),arg(oldHash)]}]);
   RES_HASH = newHash;
+  await rewrapMemberKey(a.mobile, cur, n1);
   try{ const st = JSON.parse(sessionStorage.getItem(RES_KEY)||'{}'); st.hash = newHash; sessionStorage.setItem(RES_KEY, JSON.stringify(st)); }catch(e){}
   ['pwCur','pwNew','pwNew2'].forEach(id=>{ byId(id).value=''; });
   msg.className = 'msg-ok'; msg.textContent = 'Password updated.';
@@ -2591,6 +2644,7 @@ function renderMyFlat(){
     </div>
   </div>
 
+  ${tenantDocsSectionHTML(a,f,h,occupied)}
   <div class="res-section">
     <h3>Account</h3>
     <div class="res-card pad" style="max-width:420px;">
@@ -2619,6 +2673,7 @@ function renderResidentAccounts(){
 async function setResidentStatus(id, status){
   if(!isAdmin()) return;
   await turso([{sql:'UPDATE resident_accounts SET status=? WHERE id=?', args:[arg(status),arg(num(id))]}]);
+  syncVaultGrants().catch(()=>{});
   await loadAll(); renderUsers();
 }
 async function resetResidentPassword(mobile){
@@ -2626,8 +2681,9 @@ async function resetResidentPassword(mobile){
   const p = prompt(`Set a temporary password for ${mobile} (at least 6 characters). Tell the resident, who can change it after signing in.`);
   if(p===null) return;
   if(p.length<6){ alert('Password must be at least 6 characters.'); return; }
-  await turso([{sql:'UPDATE resident_accounts SET password_hash=? WHERE mobile=?', args:[arg(await resHash(mobile,p)),arg(mobile)]}]);
-  alert('Password reset.');
+  await turso([{sql:'UPDATE resident_accounts SET password_hash=? WHERE mobile=?', args:[arg(await resHash(mobile,p)),arg(mobile)]},
+    {sql:'DELETE FROM vault_keys WHERE holder=?', args:[arg(mobile)]},{sql:'DELETE FROM doc_keys WHERE holder=?', args:[arg(mobile)]}]);
+  alert('Password reset. The member\'s document access is re-created automatically the next time they sign in and you unlock the vault.');
 }
 async function deleteResidentAccount(id){
   if(!isAdmin()) return;
@@ -2726,7 +2782,7 @@ function renderSettings(){
         <label class="toggle-row"><input type="checkbox" id="orgShowFooter" ${chk(d.showFooter)} onchange="previewOrg()"> Footer on every page</label>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="saveOrgSettings()">Save</button>
+        <button class="btn btn-primary" onclick="saveOrgSettings(this)">Save</button>
         <button class="btn" onclick="resetOrgSettings()">Reset to defaults</button>
       </div>
       <div id="orgMsg" class="err"></div>
@@ -2769,20 +2825,36 @@ async function pickOrgLogo(){
     ORG_DRAFT.logo = c.toDataURL('image/png'); previewOrg();
   }catch(e){ msg.textContent = e.message; } finally { URL.revokeObjectURL(url); }
 }
-async function saveOrgSettings(){
+async function saveOrgSettings(btn){
   if(!isAdmin()) return;
-  const msg = byId('orgMsg'); msg.className = 'err'; msg.textContent = '';
-  const d = readOrgForm();
+  const msg = byId('orgMsg'); if(msg){ msg.className = 'err'; msg.textContent = ''; }
+  const label = btn ? btn.textContent : ''; if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
   try{
-    await turso([{sql:'CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)'},
+    const d = readOrgForm();
+    await tursoStrict([{sql:'CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT)'},
       ...Object.keys(ORG_DEFAULTS).map(k=>({sql:'INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', args:[arg(k),arg(String(d[k]??''))]}))]);
-    ORG = {...ORG_DEFAULTS, ...d}; applyBranding();
-    msg.className = 'msg-ok'; msg.textContent = 'Saved.';
-  }catch(e){ msg.textContent = 'Could not save: '+e.message; }
+    ORG = {...ORG_DEFAULTS, ...d};
+    applyBranding(); applyLook(ORG); applyRoleUI(); updateAdminIndex(currentViewKey());
+    if(msg){ msg.className = 'msg-ok'; msg.textContent = 'Saved.'; }
+    settingsSavedBar(true, 'Settings saved — your changes are now applied.');
+    toast('✓ Settings saved — changes applied', null, null, 4000);
+  }catch(e){
+    if(msg) msg.textContent = 'Could not save: '+e.message;
+    settingsSavedBar(false, 'Could not save: '+e.message);
+    toast('⚠ Settings were not saved', null, null, 6000);
+  }finally{ if(btn){ btn.disabled = false; btn.textContent = label; } }
+}
+function settingsSavedBar(ok, text){
+  const host = byId('settingsBody'); if(!host) return;
+  document.querySelectorAll('#settingsSavedBar').forEach(x=>{ clearTimeout(x._t); x.remove(); });
+  const bar = document.createElement('div'); bar.id = 'settingsSavedBar'; bar.setAttribute('role','status');
+  bar.style.cssText = 'position:sticky;top:8px;z-index:50;margin:0 0 14px;padding:11px 16px;border-radius:10px;font-size:.88rem;font-weight:600;border:1px solid '+(ok?'var(--green)':'var(--red)')+';background:'+(ok?'rgba(63,185,120,.16)':'rgba(201,106,90,.16)')+';color:'+(ok?'var(--green)':'var(--red)')+';';
+  bar.textContent = (ok?'✓ ':'⚠ ')+text+' · '+new Date().toLocaleTimeString('en-IN',{timeZone:IST_TZ,hour:'2-digit',minute:'2-digit'});
+  host.prepend(bar); if(ok) bar._t = setTimeout(()=>{ if(bar.isConnected) bar.remove(); }, 6000);
 }
 async function resetOrgSettings(){
   if(!isAdmin() || !confirm('Reset the logo and all association details to the built-in defaults?')) return;
-  try{ await turso([{sql:"DELETE FROM app_settings WHERE key NOT LIKE 'pay_hidden_%'"}]); }catch(e){}
+  try{ await turso([{sql:"DELETE FROM app_settings WHERE key NOT LIKE 'pay_hidden_%' AND key<>'doc_encryption'"}]); }catch(e){}
   ORG = {...ORG_DEFAULTS}; applyBranding(); renderSettings();
 }
 
@@ -2849,7 +2921,7 @@ function lookSettingsHTML(){
         </select>
         <span style="font-size:1rem;">The quick brown fox · Flat G-103 · 9513467222</span>
       </div>
-      <div style="display:flex;gap:10px;margin-top:14px;"><button class="btn btn-primary" onclick="saveOrgSettings()">Save</button><button class="btn" onclick="revertLook()">Undo preview</button></div>
+      <div style="display:flex;gap:10px;margin-top:14px;"><button class="btn btn-primary" onclick="saveOrgSettings(this)">Save</button><button class="btn" onclick="revertLook()">Undo preview</button></div>
     </div></div>`;
 }
 function setTabVisible(k,on){ const s=new Set((ORG_DRAFT.hiddenTabs||'').split(',').filter(Boolean)); on?s.delete(k):s.add(k); ORG_DRAFT.hiddenTabs=[...s].join(','); }
@@ -2885,13 +2957,15 @@ function refreshApprovalUI(){
   setPageTitle();
 }
 function dismissApprovalBanner(){ sessionStorage.setItem('nr_ban_dismissed', String(pendingList().length)); refreshApprovalUI(); }
-function toast(msg, actionLabel, action){
+function toast(msg, actionLabel, action, ttl){
   const host = byId('toastHost'); if(!host) return;
-  const t = document.createElement('div'); t.className = 'toast';
+  // The same message never stacks: repeating it replaces the one already showing
+  [...host.querySelectorAll('.toast')].forEach(x=>{ if(x.dataset.msg===String(msg)){ clearTimeout(x._t); x.remove(); } });
+  const t = document.createElement('div'); t.className = 'toast'; t.dataset.msg = String(msg);
   t.innerHTML = `<span>${msg}</span>${actionLabel?`<button class="btn btn-sm btn-primary" data-act="1">${esc(actionLabel)}</button>`:''}<button class="toast-x" aria-label="Close">&times;</button>`;
   const a = t.querySelector('[data-act]'); if(a) a.onclick = ()=>{ try{ action&&action(); }finally{ t.remove(); } };
   t.querySelector('.toast-x').onclick = ()=>t.remove();
-  host.appendChild(t); setTimeout(()=>t.remove(), 15000);
+  host.appendChild(t); t._t = setTimeout(()=>t.remove(), ttl||15000);
 }
 function notifyBrowser(title, body){
   try{ if(typeof Notification!=='undefined' && Notification.permission==='granted' && document.hidden) new Notification(title,{body}); }catch(e){}
@@ -3228,7 +3302,7 @@ function occSettingsHTML(){
       <div class="section-label">Card style</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px;">${[['fill','Tinted card'],['stripe','Thick stripe'],['outline','Outline'],['badge','Badge only']].map(([k,l])=>`<button class="btn btn-sm ${d.occStyle===k?'btn-primary':''}" onclick="setOccStyle('${k}')">${l}</button>`).join('')}</div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;">${mini('owner','Owner occupied flat','🏠 Owner occupied')}${mini('tenant','Tenant occupied flat','🔑 Tenant occupied')}</div>
-      <div style="display:flex;gap:10px;margin-top:16px;"><button class="btn btn-primary" onclick="saveOrgSettings()">Save</button><button class="btn" onclick="revertLook()">Undo preview</button></div>
+      <div style="display:flex;gap:10px;margin-top:16px;"><button class="btn btn-primary" onclick="saveOrgSettings(this)">Save</button><button class="btn" onclick="revertLook()">Undo preview</button></div>
     </div></div>`;
 }
 function setOcc(k,v){ ORG_DRAFT[k] = v; applyOccStyle(ORG_DRAFT); }
@@ -3238,7 +3312,7 @@ function resetOcc(){ ORG_DRAFT.occOwner = ORG_DEFAULTS.occOwner; ORG_DRAFT.occTe
 /* ================= DASHBOARD ================= */
 function marqueeRow(list, dir, occ, title){
   if(!list.length) return '';
-  const chip = x=>`<div class="mq-chip occ-${occ}" onclick="openFlatDrawer('${x.f.house_no}')" title="Flat ${esc(x.f.house_no)}">${avatarHTML(x.f.house_no, x.who, x.name)}<div><div class="mq-name">${esc(x.name||'—')}</div><div class="mq-sub">Flat ${esc(x.f.house_no)} · 👥 ${num(x.f.num_members)}</div></div></div>`;
+  const chip = x=>`<div class="mq-chip occ-${occ}" onclick="openFlatDrawer('${x.f.house_no}')" title="Flat ${esc(x.f.house_no)}">${avatarHTML(x.f.house_no, x.who, x.name)}<div><div class="mq-name"><span title="${x.who==='tenant'?'Tenant':'Owner'}">${x.who==='tenant'?'🔑':'🏠'}</span> ${esc(x.name||'—')} ${chipDocBadges(x)}</div><div class="mq-sub">Flat ${esc(x.f.house_no)} · 👥 ${num(x.f.num_members)}</div></div></div>`;
   const html = list.map(chip).join('');
   return `<div class="mq-label occ-${occ}">${title} <span style="color:var(--cream-dim);font-weight:400;">(${list.length})</span></div>
     <div class="marquee"><div class="mq-track ${dir}" style="animation-duration:${Math.max(26, list.length*3.4)}s">${html}${html}</div></div>`;
@@ -3262,13 +3336,14 @@ function renderDashboard(){
   const tenantList = flats.filter(f=>occOf(f)==='tenant').map(f=>({f, who:'tenant', name:f.tenant_name}));
   el.innerHTML = `
   <div class="dash-kpis">
-    ${kpi('', agg.all.f, 'Total flats', `${pct(agg.owner.f)}% owner · ${pct(agg.tenant.f)}% tenant occupied`,'all')}
+    ${kpi('', agg.all.f, '🏢 Total flats', `${pct(agg.owner.f)}% owner · ${pct(agg.tenant.f)}% tenant occupied`,'all')}
     ${kpi('owner', agg.owner.f, '🏠 Owner occupied', `${agg.owner.m} members · ${agg.owner.c} cars · ${agg.owner.b} two-wheelers`,'owner')}
     ${kpi('tenant', agg.tenant.f, '🔑 Tenant occupied', `${agg.tenant.m} members · ${agg.tenant.c} cars · ${agg.tenant.b} two-wheelers`,'tenant')}
-    ${kpi('', owners, 'Owners on record', 'Flat owners in the register','all')}
-    ${kpi('', agg.all.m, 'Members', split('m'),'multi')}
-    ${kpi('', agg.all.c, '4-wheelers (cars)', split('c'),'cars')}
-    ${kpi('', agg.all.b, '2-wheelers', split('b'),'twow')}
+    ${kpi('', owners, '📒 Owners on record', 'Flat owners in the register','all')}
+    ${kpi('', docCounts().trusted, '🛡️ Trusted owners', `${docCounts().submitted} submitted documents · ${docCounts().awaiting} awaiting verification`,'trusted')}
+    ${kpi('', agg.all.m, '👨‍👩‍👧‍👦 Members', split('m'),'multi')}
+    ${kpi('', agg.all.c, '🚗 4-wheelers (cars)', split('c'),'cars')}
+    ${kpi('', agg.all.b, '🏍️ 2-wheelers', split('b'),'twow')}
   </div>
   <div class="dash-panel">
     <h3>Residents <span style="color:var(--cream-dim);font-weight:400;font-size:0.8rem;">— tap a face to open the flat</span></h3>
@@ -3295,7 +3370,7 @@ function phoneSettingsHTML(){
   return `<div class="res-section"><h3>Phone number access</h3>
     <div class="res-note">Controls who may reveal mobile numbers in the Directory. When ticked, a visitor must first sign in as a flat member; they then enter their own mobile number and an OTP, and can reveal the numbers of the flat they choose. Every reveal is recorded in Access Logs with the viewer's mobile, the flat and the time.</div>
     <div class="res-card pad"><label class="toggle-row"><input type="checkbox" ${d.phoneLogin!=='0'?'checked':''} onchange="ORG_DRAFT.phoneLogin=this.checked?'1':'0'"> Members must sign in, then verify with their mobile number + OTP, to view phone numbers</label>
-    <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveOrgSettings()">Save</button></div></div></div>`;
+    <div style="margin-top:12px;"><button class="btn btn-primary" onclick="saveOrgSettings(this)">Save</button></div></div></div>`;
 }
 function openOtpDrawer(presetHouse){
   PENDING_OTP=null; PENDING_MOBILE=null; PENDING_HOUSE=null;
@@ -3356,7 +3431,7 @@ function trustRowHTML(h){ return (isTrusted(h,'owner')?trustBadgeHTML('owner'):'
 function vaultSectionHTML(a,h){
   const docs = DOCS.filter(d=>d.house_no===h && d.party===a.party), v = docs.filter(d=>num(d.verified)===1).length, tr = docs.length>0 && v===docs.length;
   return `<div class="res-section"><h3>Document vault</h3>
-    <div class="res-note">Your ${a.party} documents kept in a PIN-protected book. When the admin has verified every document you earn the Trusted Flat Member badge.</div>
+    <div class="res-note">${DOC_ENC?'🔒 Your '+a.party+' documents are stored encrypted and can be opened only by you and the admin. ':'Your '+a.party+' documents are kept for you and the admin. '}They are kept in a PIN-protected book. When the admin has verified every document you earn the Trusted Flat Member badge.</div>
     <div class="res-card pad" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;"><div class="vault-bank sm">🏦</div>
       <div style="flex:1;min-width:200px;"><div style="font-size:.92rem;">${docs.length?`<b>${v}</b> of <b>${docs.length}</b> documents verified`:'No documents uploaded yet'}</div>
       <div style="margin-top:4px;">${tr?trustBadgeHTML(a.party):'<span style="font-size:.76rem;color:var(--cream-dim);">The Trusted badge unlocks when every document is verified.</span>'}</div></div>
@@ -3366,7 +3441,7 @@ let VAULT = {};
 const vaultHash = (h,p,pin)=>sha256('nr-vault:'+h+':'+p+':'+pin);
 async function openVault(house, party){
   const admin = isAdmin();
-  const ok = admin || (isResident() && RES_ACCOUNTS.some(a=>a.house_no===house && a.party===party));
+  const ok = admin || (isResident() && RES_ACCOUNTS.some(a=>a.house_no===house && (a.party===party || (a.party==='owner' && party==='tenant'))));
   if(!ok){ alert("Only this flat's "+party+" account or the admin can open this vault."); return; }
   VAULT = {house, party, page:0, urls:{}, unlocked:false, tries:0, admin, docs:[], pinHash:''};
   const row = toRows((await turso([{sql:'SELECT pin_hash FROM vault_pins WHERE house_no=? AND party=?', args:[arg(house),arg(party)]}]))[0])[0];
@@ -3439,6 +3514,7 @@ async function vaultRender(dir){
       <h3 class="vb-h">${esc(labelDocType(d.doc_type))}</h3>
       <div class="vb-meta">${esc(d.file_name)}<br>Uploaded ${d.uploaded_at?esc(istDate(parseTs(d.uploaded_at))):'—'}${d.uploaded_by?' · by resident':''}</div>
       <div>${isV?`<span class="vb-stamp">✔ ADMIN VERIFIED</span><div class="vb-meta" style="margin-top:6px;">${d.verified_at?esc(fmtIST(d.verified_at)):''}${d.verified_by?' · '+esc(d.verified_by):''}</div>`:'<span class="vb-stamp pend">⏳ AWAITING VERIFICATION</span>'}</div>
+      ${d.signed_at?`<div class="vb-meta">✍ Digitally signed by ${esc(d.signed_by||'owner')} · ${esc(fmtIST(d.signed_at))}</div>`:''}
       <div style="margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-sm" onclick="downloadDoc(${num(d.id)})">⬇ Download</button><button class="btn btn-sm" onclick="vaultGo(0)">📖 Contents</button></div></div>
     <div class="vb-right ${dir>0?'flip-next':''}"><div class="vb-prev" id="vbPrev"><span class="vb-meta">Opening page…</span></div></div>`;
   try{
@@ -3571,9 +3647,10 @@ async function hidePayBuiltin(kind,bi){
 }
 async function loadPayHidden(){
   try{
-    const rows = toRows((await tursoStrict([{sql:"SELECT key,value FROM app_settings WHERE key IN ('pay_hidden_water','pay_hidden_maintenance')"}]))[0]);
+    const rows = toRows((await tursoStrict([{sql:"SELECT key,value FROM app_settings WHERE key IN ('pay_hidden_water','pay_hidden_maintenance','doc_encryption')"}]))[0]);
     PAY_HIDDEN.water = new Set(); PAY_HIDDEN.maintenance = new Set();
-    rows.forEach(r=>{ const k = r.key.replace('pay_hidden_',''); try{ (JSON.parse(r.value||'[]')).forEach(i=>PAY_HIDDEN[k].add(i)); }catch(e){} });
+    DOC_ENC = !rows.some(r=>r.key==='doc_encryption' && String(r.value)==='0');
+    rows.forEach(r=>{ if(r.key==='doc_encryption') return; const k = r.key.replace('pay_hidden_',''); try{ (JSON.parse(r.value||'[]')).forEach(i=>PAY_HIDDEN[k].add(i)); }catch(e){} });
   }catch(e){}
 }
 
@@ -3621,6 +3698,355 @@ function globalKeys(e){
   }
 }
 
+
+
+/* ================= DOCUMENT ENCRYPTION (end-to-end, in the browser) =================
+   Every uploaded document is encrypted with its own random AES-256-GCM key before it leaves the browser.
+   That key is then locked (RSA-OAEP) for each person allowed to read the file: the admin team and the
+   approved members of that flat's owner/tenant side. Members' private keys are locked with their own
+   password; the admin private key is locked with the admin Vault passphrase. The database only ever holds
+   unreadable ciphertext and locked keys. */
+const ENC_TAG = 'enc1|';
+let DOC_ENC = true; // admin switch: encrypt newly uploaded documents (Documents tab → vault bar)
+const VK_STORE = 'nr_vk';
+let VK = {admin:'', member:'', mobile:''};
+try{ const s = JSON.parse(sessionStorage.getItem(VK_STORE)||'{}'); VK.admin = s.admin||''; VK.member = s.member||''; VK.mobile = s.mobile||''; }catch(e){}
+function vkSave(){ try{ sessionStorage.setItem(VK_STORE, JSON.stringify(VK)); }catch(e){} }
+function vkClear(){ VK = {admin:'', member:'', mobile:''}; try{ sessionStorage.removeItem(VK_STORE); }catch(e){} }
+function bytesToB64(u8){ let s = ''; const CH = 0x8000; for(let i=0;i<u8.length;i+=CH) s += String.fromCharCode.apply(null, u8.subarray(i,i+CH)); return btoa(s); }
+function b64ToBytes(b64){ const bin = atob(b64), u = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i); return u; }
+const RSA_ALG = {name:'RSA-OAEP', modulusLength:2048, publicExponent:new Uint8Array([1,0,1]), hash:'SHA-256'};
+async function pwWrapKey(password, saltB64){
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:b64ToBytes(saltB64), iterations:250000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function lockPrivateKey(pkcs8B64, password){
+  const salt = bytesToB64(crypto.getRandomValues(new Uint8Array(16))), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, await pwWrapKey(password, salt), b64ToBytes(pkcs8B64));
+  return {salt, enc:bytesToB64(iv)+'.'+bytesToB64(new Uint8Array(ct))};
+}
+async function unlockPrivateKey(row, password){
+  const [iv, ct] = row.enc_priv.split('.');
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:b64ToBytes(iv)}, await pwWrapKey(password, row.salt), b64ToBytes(ct));
+  return bytesToB64(new Uint8Array(pt));
+}
+async function newKeyPair(password){
+  const kp = await crypto.subtle.generateKey(RSA_ALG, true, ['encrypt','decrypt']);
+  const pub = bytesToB64(new Uint8Array(await crypto.subtle.exportKey('spki', kp.publicKey)));
+  const priv = bytesToB64(new Uint8Array(await crypto.subtle.exportKey('pkcs8', kp.privateKey)));
+  return {pub, priv, locked: await lockPrivateKey(priv, password)};
+}
+const importPub = b64 => crypto.subtle.importKey('spki', b64ToBytes(b64), {name:'RSA-OAEP', hash:'SHA-256'}, false, ['encrypt']);
+const importPriv = b64 => crypto.subtle.importKey('pkcs8', b64ToBytes(b64), {name:'RSA-OAEP', hash:'SHA-256'}, false, ['decrypt']);
+async function storeKeyRow(holder, kp){
+  await tursoStrict([{sql:'INSERT INTO vault_keys (holder,pub,enc_priv,salt,created_at) VALUES (?,?,?,?,?) ON CONFLICT(holder) DO UPDATE SET pub=excluded.pub,enc_priv=excluded.enc_priv,salt=excluded.salt,created_at=excluded.created_at',
+    args:[arg(holder),arg(kp.pub),arg(kp.locked.enc),arg(kp.locked.salt),arg(new Date().toISOString())]}]);
+}
+
+/* password / passphrase prompt that hides what is typed */
+function askSecret(title, msg, confirmMode, label){
+  return new Promise(resolve=>{
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML = `<div class="vault-gate" style="margin:0;"><div class="vault-bank sm" style="margin:0 auto;">🔐</div><h2 style="margin:0;color:var(--brass-soft);">${esc(title)}</h2>
+      <div style="font-size:.82rem;color:var(--cream-dim);line-height:1.55;text-align:left;">${msg}</div>
+      <input id="asP1" type="password" autocomplete="off" style="letter-spacing:.12em;font-size:1rem;" placeholder="${confirmMode?'New passphrase (8+ characters)':(label||'Vault passphrase')}">
+      ${confirmMode?'<input id="asP2" type="password" autocomplete="off" style="letter-spacing:.12em;font-size:1rem;" placeholder="Repeat passphrase">':''}
+      <div class="err" id="asErr"></div><button class="btn btn-primary" id="asOk">${confirmMode?'Create vault':'Unlock'}</button><button class="btn" id="asNo">Cancel</button></div>`;
+    document.body.appendChild(ov);
+    const done = v=>{ ov.remove(); resolve(v); };
+    const p1 = ov.querySelector('#asP1'), p2 = ov.querySelector('#asP2'), er = ov.querySelector('#asErr');
+    const ok = ()=>{ if(!p1.value){ er.textContent = 'Enter the passphrase.'; return; }
+      if(confirmMode){ if(p1.value.length<8){ er.textContent = 'Use at least 8 characters.'; return; } if(p1.value!==p2.value){ er.textContent = 'The two entries do not match.'; return; } }
+      done(p1.value); };
+    ov.querySelector('#asOk').onclick = ok; ov.querySelector('#asNo').onclick = ()=>done(null);
+    ov.addEventListener('keydown',e=>{ if(e.key==='Enter') ok(); if(e.key==='Escape') done(null); });
+    setTimeout(()=>p1.focus(),30);
+  });
+}
+
+/* ---- admin vault: create once, unlock per session ---- */
+async function adminVaultPriv(){
+  if(!isAdmin()) return '';
+  if(VK.admin) return VK.admin;
+  const row = toRows((await tursoStrict([{sql:"SELECT pub,enc_priv,salt FROM vault_keys WHERE holder='ADMIN'"}]))[0])[0];
+  if(!row){
+    const pw = await askSecret('Create the document vault', 'Documents will be stored encrypted. Choose a <b>Vault passphrase</b> for the admin team. <b>Keep it safe: if it is lost, encrypted documents can never be recovered.</b> Share it only with admins who need to read documents.', true);
+    if(!pw) return '';
+    const kp = await newKeyPair(pw); await storeKeyRow('ADMIN', kp);
+    VK.admin = kp.priv; vkSave(); toast('✓ Document vault created'); return VK.admin;
+  }
+  for(let i=0;i<3;i++){
+    const pw = await askSecret('Unlock the document vault', 'Enter the admin Vault passphrase to read encrypted documents.'+(i?' <span style="color:var(--red);">Incorrect — try again.</span>':''), false);
+    if(!pw) return '';
+    try{ VK.admin = await unlockPrivateKey(row, pw); vkSave(); syncVaultGrants().catch(()=>{}); return VK.admin; }catch(e){}
+  }
+  alert('Wrong passphrase.'); return '';
+}
+/* ---- member vault key: created / unlocked at sign-in with the member's own password ---- */
+async function residentVaultInit(mobile, password){
+  try{
+    const row = toRows((await tursoStrict([{sql:'SELECT pub,enc_priv,salt FROM vault_keys WHERE holder=?', args:[arg(mobile)]}]))[0])[0];
+    if(row){ try{ VK.member = await unlockPrivateKey(row, password); VK.mobile = mobile; vkSave(); return; }catch(e){} }
+    const kp = await newKeyPair(password); await storeKeyRow(mobile, kp); VK.member = kp.priv; VK.mobile = mobile; vkSave();
+  }catch(e){ console.warn('vault key setup failed', e); }
+}
+async function memberVaultUnlock(){
+  const a = resAcct(); if(!a) return '';
+  for(let i=0;i<3;i++){
+    const pw = await askSecret('Unlock your documents','Enter your <b>login password</b> to open your encrypted documents.'+(i?' <span style="color:var(--red);">Incorrect — try again.</span>':''), false, 'Login password');
+    if(!pw) return '';
+    if(await resHash(a.mobile,pw)!==RES_HASH) continue;
+    await residentVaultInit(a.mobile, pw);
+    if(VK.member) return VK.member;
+  }
+  return '';
+}
+async function rewrapMemberKey(mobile, oldPass, newPass){
+  try{
+    const row = toRows((await tursoStrict([{sql:'SELECT pub,enc_priv,salt FROM vault_keys WHERE holder=?', args:[arg(mobile)]}]))[0])[0];
+    if(!row) return;
+    const priv = await unlockPrivateKey(row, oldPass), locked = await lockPrivateKey(priv, newPass);
+    await tursoStrict([{sql:'UPDATE vault_keys SET enc_priv=?,salt=? WHERE holder=?', args:[arg(locked.enc),arg(locked.salt),arg(mobile)]}]);
+  }catch(e){ console.warn('rewrap failed', e); }
+}
+
+/* ---- who may read a document ---- */
+async function holdersFor(house, party, docType){
+  const rs = await tursoStrict([
+    {sql:"SELECT holder,pub FROM vault_keys WHERE holder='ADMIN'"},
+    {sql:"SELECT DISTINCT v.holder,v.pub FROM vault_keys v JOIN resident_accounts r ON r.mobile=v.holder WHERE r.house_no=? AND r.status='approved' AND (r.party=? OR ?='tenant_agreement' OR (r.party='owner' AND ?='tenant'))", args:[arg(house),arg(party),arg(docType),arg(party)]}
+  ]);
+  return toRows(rs[0]).concat(toRows(rs[1]));
+}
+
+/* ---- encrypt + store ---- */
+async function encryptBytes(plainB64){
+  const dek = await crypto.subtle.generateKey({name:'AES-GCM', length:256}, true, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM', iv}, dek, b64ToBytes(plainB64)));
+  return {dekRaw:new Uint8Array(await crypto.subtle.exportKey('raw', dek)), iv, ct};
+}
+async function wrapFor(dekRaw, pubB64){ return bytesToB64(new Uint8Array(await crypto.subtle.encrypt({name:'RSA-OAEP'}, await importPub(pubB64), dekRaw))); }
+async function storeDoc(o){
+  /* o: {house,type,party,name,b64,mime,uploadedBy} — encrypted unless the admin has switched encryption off */
+  if(!DOC_ENC){
+    const cols0 = o.uploadedBy ? 'house_no,doc_type,party,file_name,file_data,uploaded_at,uploaded_by' : 'house_no,doc_type,party,file_name,file_data,uploaded_at';
+    const args0 = [arg(o.house),arg(o.type),arg(o.party),arg(o.name),arg(o.b64+'|'+(o.mime||'')),arg(new Date().toISOString())]; if(o.uploadedBy) args0.push(arg(o.uploadedBy));
+    const r0 = await tursoStrict([{sql:`INSERT INTO documents (${cols0}) VALUES (${args0.map(()=>'?').join(',')})`, args:args0}]);
+    return num(r0[0].last_insert_rowid);
+  }
+  const holders = await holdersFor(o.house, o.party, o.type);
+  if(!holders.some(h=>h.holder==='ADMIN')){
+    if(isAdmin()){ if(!(await adminVaultPriv())) throw new Error('Documents can only be saved once the vault is created.'); holders.push(...(await holdersFor(o.house,o.party,o.type)).filter(h=>!holders.some(x=>x.holder===h.holder))); }
+    else throw new Error('The document vault has not been set up yet. Please ask the admin to open the Documents tab once, then try again.');
+  }
+  const e = await encryptBytes(o.b64);
+  const keys = []; for(const h of holders) keys.push({holder:h.holder, wrapped:await wrapFor(e.dekRaw, h.pub)});
+  const data = ENC_TAG + (o.mime||'') + '|' + bytesToB64(e.iv) + '|' + bytesToB64(e.ct);
+  const cols = o.uploadedBy ? 'house_no,doc_type,party,file_name,file_data,uploaded_at,uploaded_by' : 'house_no,doc_type,party,file_name,file_data,uploaded_at';
+  const args = [arg(o.house),arg(o.type),arg(o.party),arg(o.name),arg(data),arg(new Date().toISOString())]; if(o.uploadedBy) args.push(arg(o.uploadedBy));
+  const r = await tursoStrict([{sql:`INSERT INTO documents (${cols}) VALUES (${args.map(()=>'?').join(',')})`, args}]);
+  const id = num(r[0].last_insert_rowid);
+  if(!id) throw new Error('Could not save the document.');
+  await tursoStrict(keys.map(k=>({sql:'INSERT OR REPLACE INTO doc_keys (doc_id,holder,wrapped) VALUES (?,?,?)', args:[arg(id),arg(k.holder),arg(k.wrapped)]})));
+  return id;
+}
+
+/* ---- decrypt ---- */
+async function decryptDoc(docId, fileData){
+  const [, mime, iv, ct] = String(fileData).split('|');
+  const holder = isAdmin() ? 'ADMIN' : (VK.mobile || '');
+  let priv = isAdmin() ? await adminVaultPriv() : VK.member;
+  if(!priv && !isAdmin()) priv = await memberVaultUnlock();
+  if(!priv){ if(isAdmin()) throw new Error('vault locked'); throw new Error('Your documents are still locked. Enter your login password when asked.'); }
+  const k = toRows((await tursoStrict([{sql:'SELECT wrapped FROM doc_keys WHERE doc_id=? AND holder=?', args:[arg(num(docId)),arg(holder)]}]))[0])[0];
+  if(!k && !isAdmin()){ // try to be unlocked on the spot if the admin vault is open in another session; otherwise explain
+    throw new Error('Your access to this document is being prepared. It opens as soon as the admin opens the Documents tab once. Please try again shortly.');
+  }
+  if(!k) throw new Error('No key for this document yet.');
+  const dekRaw = await crypto.subtle.decrypt({name:'RSA-OAEP'}, await importPriv(priv), b64ToBytes(k.wrapped));
+  const dek = await crypto.subtle.importKey('raw', dekRaw, 'AES-GCM', false, ['decrypt']);
+  const pt = new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM', iv:b64ToBytes(iv)}, dek, b64ToBytes(ct)));
+  return {b64:bytesToB64(pt), mime};
+}
+
+/* ---- admin maintenance: grant new members, revoke removed ones, clean orphans ---- */
+async function syncVaultGrants(){
+  if(!isAdmin()) return 0;
+  await tursoStrict([
+    {sql:"DELETE FROM doc_keys WHERE doc_id NOT IN (SELECT id FROM documents)"},
+    {sql:"DELETE FROM doc_keys WHERE holder<>'ADMIN' AND NOT EXISTS (SELECT 1 FROM documents d JOIN resident_accounts r ON r.house_no=d.house_no AND r.mobile=doc_keys.holder AND r.status='approved' AND (r.party=d.party OR d.doc_type='tenant_agreement' OR (r.party='owner' AND d.party='tenant')) WHERE d.id=doc_keys.doc_id)"}
+  ]);
+  if(!VK.admin) return 0;
+  const todo = toRows((await tursoStrict([{sql:`SELECT d.id AS id, v.holder AS holder, v.pub AS pub, k.wrapped AS wrapped FROM documents d
+    JOIN resident_accounts r ON r.house_no=d.house_no AND r.status='approved' AND (r.party=d.party OR d.doc_type='tenant_agreement' OR (r.party='owner' AND d.party='tenant'))
+    JOIN vault_keys v ON v.holder=r.mobile
+    JOIN doc_keys k ON k.doc_id=d.id AND k.holder='ADMIN'
+    WHERE d.file_data LIKE 'enc1|%' AND NOT EXISTS (SELECT 1 FROM doc_keys x WHERE x.doc_id=d.id AND x.holder=v.holder)`}]))[0]);
+  if(!todo.length) return 0;
+  const priv = await importPriv(VK.admin), stmts = [];
+  for(const t of todo){
+    const dekRaw = await crypto.subtle.decrypt({name:'RSA-OAEP'}, priv, b64ToBytes(t.wrapped));
+    stmts.push({sql:'INSERT OR REPLACE INTO doc_keys (doc_id,holder,wrapped) VALUES (?,?,?)', args:[arg(num(t.id)),arg(t.holder),arg(await wrapFor(new Uint8Array(dekRaw), t.pub))]});
+  }
+  await tursoStrict(stmts); return stmts.length;
+}
+async function setDocEncryption(on){
+  if(!isAdmin()) return;
+  if(!on){
+    if(!confirm('Switch document encryption OFF?\n\nNew uploads will be stored in readable form, so anyone with access to the database could read them. Documents that are already encrypted stay encrypted unless you choose to convert them next.')) return;
+  } else if(!(await adminVaultPriv())) return;
+  try{
+    await tursoStrict([{sql:'INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', args:[arg('doc_encryption'),arg(on?'1':'0')]}]);
+    DOC_ENC = on;
+    toast(on ? '🔐 Document encryption is ON' : '🔓 Document encryption is OFF');
+  }catch(e){ alert('Could not change the setting: '+e.message); return; }
+  if(!on){
+    const n = num(toRows((await tursoStrict([{sql:"SELECT COUNT(*) AS c FROM documents WHERE doc_type NOT IN ('owner_photo','tenant_photo') AND file_data LIKE 'enc1|%'"}]))[0])[0].c);
+    if(n && confirm(`Also convert the ${n} encrypted document(s) back to readable form now?\n\nThey will then open for members without any key. (Needs the Vault passphrase.)`)) await decryptAllDocs();
+  }
+  await refreshVaultStatus();
+}
+async function decryptAllDocs(){
+  if(!isAdmin() || !(await adminVaultPriv())) return;
+  const list = toRows((await tursoStrict([{sql:"SELECT id,file_data FROM documents WHERE doc_type NOT IN ('owner_photo','tenant_photo') AND file_data LIKE 'enc1|%'"}]))[0]);
+  let done = 0;
+  for(const d of list){
+    try{
+      const x = await decryptDoc(d.id, d.file_data);
+      await tursoStrict([{sql:"UPDATE documents SET file_data=? WHERE id=? AND file_data LIKE 'enc1|%'", args:[arg(x.b64+'|'+(x.mime||'')),arg(num(d.id))]},{sql:'DELETE FROM doc_keys WHERE doc_id=?', args:[arg(num(d.id))]}]);
+      done++;
+    }catch(e){ console.warn('decrypt-all failed for', d.id, e); }
+  }
+  toast(`✓ ${done} of ${list.length} documents converted to readable form`);
+}
+async function grantNow(){ if(!(await adminVaultPriv())) return; const n = await syncVaultGrants().catch(()=>0); toast('✓ Access granted'+(n?' ('+n+')':'')); refreshVaultStatus(); }
+async function encryptExistingDocs(){
+  if(!isAdmin()) return;
+  if(!(await adminVaultPriv())) return;
+  const list = toRows((await tursoStrict([{sql:"SELECT id,house_no,doc_type,party,file_data FROM documents WHERE doc_type NOT IN ('owner_photo','tenant_photo') AND file_data NOT LIKE 'enc1|%'"}]))[0]);
+  if(!list.length){ toast('All documents are already encrypted'); await refreshVaultStatus(); return; }
+  if(!confirm(`Encrypt ${list.length} existing document(s) now? This replaces the readable copies stored in the database with encrypted ones.`)) return;
+  let done = 0;
+  for(const d of list){
+    try{
+      const [b64, mime] = String(d.file_data||'').split('|'); if(!b64) continue;
+      const holders = await holdersFor(d.house_no, d.party||'owner', d.doc_type);
+      const e = await encryptBytes(b64), keys = [];
+      for(const h of holders) keys.push({holder:h.holder, wrapped:await wrapFor(e.dekRaw, h.pub)});
+      const data = ENC_TAG + (mime||'') + '|' + bytesToB64(e.iv) + '|' + bytesToB64(e.ct);
+      await tursoStrict([{sql:'UPDATE documents SET file_data=? WHERE id=? AND file_data NOT LIKE \'enc1|%\'', args:[arg(data),arg(num(d.id))]}]
+        .concat(keys.map(k=>({sql:'INSERT OR REPLACE INTO doc_keys (doc_id,holder,wrapped) VALUES (?,?,?)', args:[arg(num(d.id)),arg(k.holder),arg(k.wrapped)]}))));
+      done++;
+    }catch(e){ console.warn('encrypt failed for doc', d.id, e); }
+  }
+  await syncVaultGrants().catch(()=>{});
+  toast(`✓ ${done} of ${list.length} documents encrypted`); await refreshVaultStatus();
+}
+async function refreshVaultStatus(){
+  const el = byId('vaultStatus'); if(!el || !isAdmin()) return;
+  try{
+    if(VK.admin) await syncVaultGrants().catch(()=>{});
+    const pend = num(toRows((await tursoStrict([{sql:`SELECT COUNT(*) AS c FROM documents d JOIN resident_accounts r ON r.house_no=d.house_no AND r.status='approved' AND (r.party=d.party OR d.doc_type='tenant_agreement' OR (r.party='owner' AND d.party='tenant')) JOIN vault_keys v ON v.holder=r.mobile WHERE d.file_data LIKE 'enc1|%' AND NOT EXISTS (SELECT 1 FROM doc_keys x WHERE x.doc_id=d.id AND x.holder=v.holder)`}]))[0])[0].c);
+    const nokey = num(toRows((await tursoStrict([{sql:"SELECT COUNT(DISTINCT r.mobile) AS c FROM resident_accounts r WHERE r.status='approved' AND NOT EXISTS (SELECT 1 FROM vault_keys v WHERE v.holder=r.mobile)"}]))[0])[0].c);
+    window.__vaultNote = (pend ? ` <div style="margin-top:6px;">⏳ ${pend} member document access${pend>1?'es are':' is'} waiting. <button class="btn btn-sm btn-primary" onclick="grantNow()">Grant access now</button></div>` : '') + (nokey ? ` <div style="margin-top:6px;font-size:.78rem;color:var(--cream-dim);">${nokey} approved member${nokey>1?'s have':' has'} not signed in since encryption was enabled. They get access after signing in once, then you open this tab.</div>` : '');
+    const r = toRows((await tursoStrict([{sql:"SELECT COUNT(*) AS n, SUM(CASE WHEN file_data LIKE 'enc1|%' THEN 1 ELSE 0 END) AS e FROM documents WHERE doc_type NOT IN ('owner_photo','tenant_photo')"}, ]))[0])[0];
+    const adm = toRows((await tursoStrict([{sql:"SELECT 1 AS x FROM vault_keys WHERE holder='ADMIN'"}]))[0]).length;
+    const n = num(r.n), e = num(r.e);
+    el.innerHTML = `${DOC_ENC?'🔐':'🔓'} <b>Document encryption: ${DOC_ENC?'ON':'OFF'}</b> <button class="btn btn-sm ${DOC_ENC?'':'btn-primary'}" onclick="setDocEncryption(${DOC_ENC?'false':'true'})">${DOC_ENC?'Turn off':'Turn on'}</button> — vault ${adm?'created':'not created yet'} · ${e} of ${n} documents encrypted` + (DOC_ENC && n>e ? ` <button class="btn btn-sm btn-primary" onclick="encryptExistingDocs()">Encrypt ${n-e} existing</button>` : '') + (!DOC_ENC && e>0 ? ` <button class="btn btn-sm" onclick="decryptAllDocs().then(refreshVaultStatus)">Convert ${e} encrypted to readable</button>` : '') + (adm && !VK.admin ? ` <button class="btn btn-sm" onclick="adminVaultPriv().then(()=>refreshVaultStatus())">Unlock</button>` : '') + (!adm && DOC_ENC ? ` <button class="btn btn-sm btn-primary" onclick="adminVaultPriv().then(()=>refreshVaultStatus())">Create vault</button>` : '') + (window.__vaultNote||'');
+  }catch(e){ el.textContent = ''; }
+}
+
+
+
+/* ================= TENANT DOCUMENTS (uploaded by owner) + DIGITAL SIGNATURE ================= */
+async function sha256B64(b64){ const d = await crypto.subtle.digest('SHA-256', b64ToBytes(b64)); return Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+const TENANT_UPLOAD_TYPES = [['tenant_id','Tenant ID proof'],['tenant_agreement','Tenant rental agreement (copy)'],['police_verification','Police verification']];
+function canSeeTenantDocs(h){ return isAdmin() || (isResident() && RES_ACCOUNTS.some(a=>a.house_no===h && a.party==='owner')); }
+function chipDocBadges(x){
+  if(x.who!=='tenant' || !canSeeTenantDocs(x.f.house_no)) return '';
+  const ds = DOCS.filter(d=>d.house_no===x.f.house_no && d.party==='tenant');
+  const id = ds.some(d=>d.doc_type==='tenant_id'), ag = ds.filter(d=>d.doc_type==='tenant_agreement');
+  const signed = ds.length>0 && ds.every(d=>d.signed_at) && ag.length>0;
+  return `<span class="mq-docs"><i class="${id?'on':''}" title="Tenant ID proof ${id?'uploaded':'missing'}">🪪</i><i class="${ag.length?'on':''}" title="Rent agreement ${ag.length?'uploaded':'missing'}">📜</i><i class="${signed?'on':''}" title="${signed?'All tenant documents signed by the owner':'Not yet signed by the owner'}">✍️</i></span>`;
+}
+function tenantDocsSectionHTML(a,f,h,occupied){
+  if(a.party!=='owner' || !occupied) return '';
+  const docs = DOCS.filter(d=>d.house_no===h && d.party==='tenant');
+  const rows = docs.length ? docs.map(d=>{
+    const mine = d.uploaded_by===a.mobile, locked = !!d.signed_at || num(d.verified)===1;
+    return `<div class="doc-item"><div><div class="doc-title">${esc(labelDocType(d.doc_type))} ${statusPillHTML(d)}</div><div class="doc-meta">${esc(d.file_name)} · uploaded ${d.uploaded_at?istDate(parseTs(d.uploaded_at)):''}${d.signed_at?' · signed '+esc(istDate(parseTs(d.signed_at))):''}</div></div>
+      <div><button class="icon-btn" onclick="previewDoc(${num(d.id)})">Preview</button><button class="icon-btn" onclick="downloadDoc(${num(d.id)})">Download</button>${!d.signed_at?`<button class="icon-btn" style="color:var(--green);" onclick="openSignDrawer(${num(d.id)})">✍ Sign</button>`:''}${mine && !locked?`<button class="icon-btn del" onclick="deleteResidentDoc(${num(d.id)})">Remove</button>`:''}</div></div>`;
+  }).join('') : `<div style="padding:16px 0;color:var(--cream-dim);font-size:0.85rem;">No tenant documents yet. Upload your tenant's ID proof and the rent agreement copy below.</div>`;
+  return `<div class="res-section"><h3>🔑 Tenant documents — ${esc(f.tenant_name||'tenant')}</h3>
+    <div class="res-note">Your flat is tenant-occupied. Upload your tenant's ID proof and a copy of the rental agreement, then sign each one digitally as the owner. Signed copies are locked, and the file's fingerprint is recorded so any later change is detectable.</div>
+    <div class="res-card">${rows}
+      <div class="upload-row"><select id="tdType">${TENANT_UPLOAD_TYPES.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select><input type="file" id="tdFile" accept=".pdf,image/*"><button class="btn btn-primary" id="tdBtn" onclick="uploadTenantDoc()">Upload</button></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;"><button class="btn btn-sm" onclick="openVault('${esc(h)}','tenant')">🏦 Open tenant document vault</button></div>
+      <div id="tdMsg" class="err"></div></div></div>`;
+}
+async function uploadTenantDoc(){
+  const a = resAcct(); if(!a || a.party!=='owner') return;
+  const msg = byId('tdMsg'), btn = byId('tdBtn'), input = byId('tdFile'); msg.className = 'err'; msg.textContent = '';
+  const f0 = FLATS.find(x=>x.house_no===a.house_no) || {};
+  if(!(f0.tenant_name && f0.tenant_name!=='NA')){ msg.textContent = 'This flat is not recorded as tenant-occupied.'; return; }
+  const type = byId('tdType').value;
+  if(!TENANT_UPLOAD_TYPES.some(([v])=>v===type)){ msg.textContent = 'Choose a document type.'; return; }
+  if(!input.files.length){ msg.textContent = 'Choose a file or take a photo first.'; return; }
+  if(DOCS.filter(d=>d.uploaded_by===a.mobile && d.house_no===a.house_no).length>=MAX_UPLOADS_PER_ACCOUNT){ msg.textContent = `You can keep up to ${MAX_UPLOADS_PER_ACCOUNT} files here. Remove one first.`; return; }
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  try{
+    const f = await prepareUploadFile(input.files[0]);
+    await storeDoc({house:a.house_no,type,party:'tenant',name:f.name,b64:f.b64,mime:f.mime,uploadedBy:a.mobile});
+    await loadAll(); renderMyFlat(); toast('✓ Tenant document uploaded — sign it to complete');
+  }catch(e){ btn.disabled = false; btn.textContent = 'Upload'; msg.textContent = e.message || 'Upload failed.'; }
+}
+let SIGN = null;
+function openSignDrawer(id){
+  const a = resAcct(), d = DOCS.find(x=>String(x.id)===String(id));
+  if(!a || a.party!=='owner' || !d || d.house_no!==a.house_no || d.party!=='tenant'){ alert('Only the flat owner can sign tenant documents.'); return; }
+  if(d.signed_at){ alert('This document is already signed.'); return; }
+  SIGN = {id:num(id), drawn:false};
+  openDrawer(`<div class="drawer-head"><div><h2>Sign document</h2><div class="sub">${esc(labelDocType(d.doc_type))} · Flat ${esc(d.house_no)}</div></div><button class="close-x" onclick="closeDrawer()">&times;</button></div>
+  <div class="drawer-body">
+    <div class="field-group"><label>Draw your signature (finger or mouse)</label><canvas id="sigPad" class="sig-pad" width="420" height="150"></canvas>
+      <div><button class="btn btn-sm" onclick="sigClear()">Clear</button></div></div>
+    <div class="field-group"><label>Full name as owner</label><input id="sigName" value="${esc(a.name||'')}"></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:.82rem;line-height:1.5;"><input type="checkbox" id="sigOk" style="margin-top:3px;"> I have reviewed this document and confirm it is a true copy. I sign it as the owner of flat ${esc(d.house_no)}.</label>
+    <div class="field-group"><label>Confirm with your login password</label><input id="sigPass" type="password" autocomplete="current-password"></div>
+    <button class="btn btn-primary" id="sigBtn" onclick="signDoc()">✍ Sign now</button><div class="err" id="sigErr"></div>
+  </div>`);
+  setTimeout(sigInit, 40);
+}
+function sigInit(){
+  const c = byId('sigPad'); if(!c) return; const ctx = c.getContext('2d');
+  ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#10223d';
+  let down = false;
+  const pos = e=>{ const r = c.getBoundingClientRect(); return [(e.clientX-r.left)*c.width/r.width, (e.clientY-r.top)*c.height/r.height]; };
+  c.addEventListener('pointerdown',e=>{ down = true; c.setPointerCapture(e.pointerId); const [x,y] = pos(e); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+.1,y+.1); ctx.stroke(); if(SIGN) SIGN.drawn = true; });
+  c.addEventListener('pointermove',e=>{ if(!down) return; const [x,y] = pos(e); ctx.lineTo(x,y); ctx.stroke(); });
+  const up = ()=>{ down = false; };
+  c.addEventListener('pointerup',up); c.addEventListener('pointercancel',up);
+}
+function sigClear(){ const c = byId('sigPad'); if(!c) return; c.getContext('2d').clearRect(0,0,c.width,c.height); if(SIGN) SIGN.drawn = false; }
+async function signDoc(){
+  const a = resAcct(), er = byId('sigErr'), btn = byId('sigBtn'); er.textContent = '';
+  if(!a || a.party!=='owner' || !SIGN) return;
+  const name = byId('sigName').value.trim(), pw = byId('sigPass').value;
+  if(!SIGN.drawn){ er.textContent = 'Please draw your signature.'; return; }
+  if(name.length<2){ er.textContent = 'Enter your full name.'; return; }
+  if(!byId('sigOk').checked){ er.textContent = 'Please tick the confirmation.'; return; }
+  if(!pw || (await resHash(a.mobile,pw))!==RES_HASH){ er.textContent = 'Password is incorrect.'; return; }
+  btn.disabled = true; btn.textContent = 'Signing…';
+  try{
+    const f = await fetchDocFile(SIGN.id); if(!f) throw new Error('Could not open the document to sign it.');
+    const hash = await sha256B64(f.b64), png = byId('sigPad').toDataURL('image/png');
+    const by = name + ' (owner, flat ' + a.house_no + ')';
+    await tursoStrict([{sql:'UPDATE documents SET signed_by=?,signed_at=?,signature=?,signed_hash=? WHERE id=? AND house_no=? AND signed_at IS NULL', args:[arg(by),arg(new Date().toISOString()),arg(png),arg(hash),arg(SIGN.id),arg(a.house_no)]}]);
+    SIGN = null; closeDrawer(); await loadAll(); renderMyFlat(); toast('✓ Document signed');
+  }catch(e){ btn.disabled = false; btn.textContent = '✍ Sign now'; er.textContent = e.message || 'Could not sign.'; }
+}
 
 /* ================= DRAWER HELPERS ================= */
 function openDrawer(html){ document.getElementById('drawer').innerHTML = html; document.getElementById('drawer').classList.add('show'); document.getElementById('overlay').classList.add('show'); initSlides(); }
